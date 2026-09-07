@@ -1,154 +1,326 @@
 # System Design Lesson Plan
 
+## Design Framework
+
+This lesson plan follows the structured framework for AI-assisted lesson design:
+
+| Component | Purpose |
+|-----------|---------|
+| **Learning Goal** | Clarifies what success looks like |
+| **Lesson Sequence** | Sets flow and pacing |
+| **Assessment Evidence** | Defines how learning will be shown |
+| **Learner Profile** | Who the learners are |
+| **Prior Knowledge** | What learners already know |
+| **Learning Activities** | Tasks learners will do |
+| **Output Requirements** | Formats and constraints |
+| **Accessibility & Supports** | Inclusive options for every learner |
+| **Teacher Decisions** | Preferences and priorities |
+
+---
+
+## Learner Profile
+
+- **Audience:** Software engineers preparing for system design interviews
+- **Level:** Beginner to intermediate
+- **Context:** Classroom or self-paced learning
+- **Prior Knowledge:** Basic programming concepts, client-server model
+
+---
+
+## Course Overview
+
+| Module | Topic | Duration |
+|--------|-------|----------|
+| 0 | Foundations & Pillars | 60 min |
+| 1 | Building Blocks | 60 min |
+| 2 | Scaling Strategies | 60 min |
+| 3 | Caching Deep Dive | 60 min |
+| 4 | Database Design | 60 min |
+| 5 | API Design | 60 min |
+| 6 | Real-World Systems | 90 min |
+
+---
+
 ## Lesson 1: Introduction to System Design (60 min)
 
-### Learning Objectives
-- Define system design and its importance
-- Understand HLD vs LLD
-- Identify the 5 pillars of great design
+### Learning Goal
+Define system design and identify the 5 pillars that guide architectural decisions.
 
-### Key Concepts
-1. **Scalability** - Handle growth (10x, 1000x users)
-2. **High Availability** - Stay online despite failures
-3. **Reliability** - Work correctly, not just online
-4. **Efficiency** - Fast response (latency) + high throughput
-5. **Manageability** - Easy to debug and update
+### Prior Knowledge
+- Basic programming concepts
+- What a server is
+- What a database is
 
-### Activities
+### Lesson Sequence
+1. Warm-up discussion (5 min)
+2. Core concepts lecture (20 min)
+3. Pillar identification activity (15 min)
+4. Assessment (10 min)
+
+### Learning Activities
 - Discuss: How do apps handle millions of concurrent users?
 - Group exercise: Identify pillars in existing systems
+- Mini-quiz on pillar definitions
 
-### Assessment
+### Assessment Evidence
 - Quiz on 5 pillars definitions
 - Short answer: Why is reliability different from availability?
+
+### Output Requirements
+- One-paragraph explanation of Rust's value proposition
+- Architecture diagram with labeled pillars
+
+### Accessibility & Supports
+- Visual diagrams for visual learners
+- Glossary of terms provided
+- Pair discussion for verbal processors
+
+### Teacher Decisions
+- Emphasize real-world examples (Netflix, Uber)
+- Connect to students' existing projects
 
 ---
 
 ## Lesson 2: Building Blocks (60 min)
 
-### Learning Objectives
-- Identify core system components
-- Understand component interactions
-- Draw basic architecture diagrams
+### Learning Goal
+Identify and understand the core components that make up modern distributed systems.
 
-### Key Components
-| Component | Purpose |
-|-----------|---------|
-| Load Balancer | Distribute traffic across servers |
-| Cache | Store frequent data temporarily |
-| CDN | Serve content from edge locations |
-| Message Queue | Async communication between services |
-| Database | Persistent data storage |
+### Prior Knowledge
+- Completed Lesson 1 (Foundations)
+- Basic web architecture understanding
 
-### Activities
+### Lesson Sequence
+1. Review pillars (5 min)
+2. Component lecture (20 min)
+3. Diagramming activity (20 min)
+4. Assessment (15 min)
+
+### Learning Activities
 - Diagram: Draw a 3-tier architecture
 - Hands-on: Label components in a sample system
+- Component matching game
+
+### Assessment Evidence
+- Labeled architecture diagram
+- Component purpose explanations
+
+### Output Requirements
+- Complete architecture diagram
+- Written explanation of each component's role
+
+### Accessibility & Supports
+- Color-coded component diagrams
+- Interactive drag-and-drop activity
+- Reference card for components
+
+### Teacher Decisions
+- Use consistent colors for component types
+- Connect to real systems students use daily
 
 ---
 
 ## Lesson 3: Scaling Strategies (60 min)
 
-### Learning Objectives
-- Compare vertical vs horizontal scaling
-- Choose appropriate scaling approach
-- Understand load balancer role
+### Learning Goal
+Compare vertical and horizontal scaling approaches and choose appropriate strategies.
 
-### Scaling Comparison
-| Aspect | Vertical | Horizontal |
-|--------|----------|------------|
-| Method | Upgrade single server | Add more servers |
-| Cost | Expensive at scale | Cost-effective |
-| Complexity | Simple | Requires load balancing |
-| Single Point of Failure | Yes | No |
+### Prior Knowledge
+- Completed Lessons 1-2
+- Understanding of servers and load balancers
 
-### Activities
+### Lesson Sequence
+1. Review building blocks (5 min)
+2. Scaling concepts lecture (20 min)
+3. Case study analysis (20 min)
+4. Assessment (15 min)
+
+### Learning Activities
 - Case study: Netflix's scaling journey
 - Decision exercise: Which approach for given scenarios?
+- Trade-off analysis discussion
+
+### Assessment Evidence
+- Scaling decision matrix
+- Written justification for choices
+
+### Output Requirements
+- Comparison table with pros/cons
+- Scaling recommendation for given scenario
+
+### Accessibility & Supports
+- Side-by-side visual comparison
+- Real-world case studies
+- Decision flowchart
+
+### Teacher Decisions
+- Emphasize cost implications
+- Connect to startup vs enterprise contexts
 
 ---
 
 ## Lesson 4: Caching Deep Dive (60 min)
 
-### Learning Objectives
-- Implement caching strategies
-- Understand cache hit/miss ratios
-- Apply cache invalidation techniques
+### Learning Goal
+Implement caching strategies and understand cache invalidation techniques.
 
-### Caching Types
-1. **Browser Cache** - Client-side storage
-2. **CDN Cache** - Edge location storage
-3. **Application Cache** - Server-side (Redis, Memcached)
-4. **Database Cache** - Query result caching
+### Prior Knowledge
+- Completed Lessons 1-3
+- Understanding of databases and performance
 
-### Cache Patterns
-- **Cache-Aside**: App manages cache explicitly
-- **Write-Through**: Write to cache + DB simultaneously
-- **Write-Behind**: Write to cache, async to DB
-- **Write-Around**: Write directly to DB, skip cache
+### Lesson Sequence
+1. Review scaling (5 min)
+2. Caching concepts lecture (20 min)
+3. Pattern analysis activity (20 min)
+4. Assessment (15 min)
 
-### Activities
+### Learning Activities
 - Calculate cache hit ratios
 - Design caching for a URL shortener
+- Cache pattern matching exercise
+
+### Assessment Evidence
+- Cache ratio calculations
+- Caching strategy recommendation
+- Invalidation approach explanation
+
+### Output Requirements
+- Cache implementation diagram
+- Written trade-off analysis
+
+### Accessibility & Supports
+- Step-by-step cache flow diagrams
+- Calculator for ratios
+- Pattern reference sheet
+
+### Teacher Decisions
+- Use Redis examples (industry standard)
+- Connect to real performance improvements
 
 ---
 
 ## Lesson 5: Database Design (60 min)
 
-### Learning Objectives
-- Choose SQL vs NoSQL
-- Understand normalization vs denormalization
-- Apply sharding strategies
+### Learning Goal
+Choose between SQL and NoSQL and understand sharding strategies.
 
-### SQL vs NoSQL
-| Feature | SQL | NoSQL |
-|---------|-----|-------|
-| Schema | Rigid | Flexible |
-| Scaling | Vertical | Horizontal |
-| ACID | Yes | Eventually consistent |
-| Best for | Complex queries | Large scale, simple queries |
+### Prior Knowledge
+- Completed Lessons 1-4
+- Basic database concepts
 
-### Activities
+### Lesson Sequence
+1. Review caching (5 min)
+2. Database types lecture (20 min)
+3. Design activity (20 min)
+4. Assessment (15 min)
+
+### Learning Activities
 - Schema design exercise
 - Sharding strategy discussion
+- SQL vs NoSQL decision matrix
+
+### Assessment Evidence
+- Database choice justification
+- Schema design sample
+- Sharding plan explanation
+
+### Output Requirements
+- Database selection rationale
+- Sample schema with relationships
+- Sharding strategy diagram
+
+### Accessibility & Supports
+- Comparison tables
+- Visual schema diagrams
+- Decision flowchart
+
+### Teacher Decisions
+- Emphasize CAP theorem implications
+- Connect to real-world data patterns
 
 ---
 
 ## Lesson 6: API Design (60 min)
 
-### Learning Objectives
-- Design RESTful APIs
-- Compare REST vs GraphQL vs gRPC
-- Implement rate limiting
+### Learning Goal
+Design RESTful APIs and compare REST vs GraphQL vs gRPC.
 
-### API Paradigms
-| Type | Use Case | Format |
-|------|----------|--------|
-| REST | Web applications | JSON |
-| GraphQL | Flexible queries | JSON |
-| gRPC | Microservices | Protocol Buffers |
+### Prior Knowledge
+- Completed Lessons 1-5
+- HTTP basics
 
-### Activities
+### Lesson Sequence
+1. Review databases (5 min)
+2. API paradigms lecture (20 min)
+3. Design activity (20 min)
+4. Assessment (15 min)
+
+### Learning Activities
 - Design API for a blog system
 - Implement rate limiting logic
+- API versioning discussion
+
+### Assessment Evidence
+- API endpoint documentation
+- Rate limiting implementation
+- Versioning strategy explanation
+
+### Output Requirements
+- Complete API specification
+- Rate limiting approach
+- Versioning plan
+
+### Accessibility & Supports
+- API documentation templates
+- Interactive endpoint builder
+- Common patterns reference
+
+### Teacher Decisions
+- Use industry-standard practices
+- Connect to tools students may use
 
 ---
 
 ## Lesson 7: Real-World System Design (90 min)
 
-### Learning Objectives
-- Apply all concepts to design complete systems
-- Identify bottlenecks and trade-offs
-- Present and defend design decisions
+### Learning Goal
+Apply all concepts to design complete systems and defend design decisions.
 
-### Design Prompts
-1. URL Shortener (bit.ly)
-2. WhatsApp/Telegram
-3. YouTube/Netflix
-4. Uber/Lyft
+### Prior Knowledge
+- Completed Lessons 1-6
+- All foundational concepts
 
-### Activities
+### Lesson Sequence
+1. Framework review (10 min)
+2. Design exercise (50 min)
+3. Peer review (20 min)
+4. Reflection (10 min)
+
+### Learning Activities
 - Full system design exercise (45 min)
 - Peer review and presentation
+- Trade-off defense discussion
+
+### Assessment Evidence
+- Complete system design
+- Architecture diagram
+- Trade-off analysis
+- Peer feedback
+
+### Output Requirements
+- Full design document
+- Architecture diagram
+- Written trade-off analysis
+- Presentation to peers
+
+### Accessibility & Supports
+- Design template
+- Peer collaboration structure
+- Reflection prompts
+
+### Teacher Decisions
+- Emphasize iterative design
+- Connect to interview preparation
 
 ---
 
