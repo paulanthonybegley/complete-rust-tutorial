@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: db-laws
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dblaws
+    username: dblaws
+    password: dblaws
+    hikari:
+      # Law 3/4 - the pool is the lever the DBA turns when the bottleneck is
+      # connections, not queries. Too small = queued checkouts; too big = idle
+      # connections doing nothing. Start small and measure.
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 5000
+  jpa:
+    hibernate:
+      # Law 2 - never run with update in production. It hides schema drift.
+      # Here it keeps the tutorial zero-setup; switch to validate + Flyway
+      # (schema-indexes.sql is the Flyway-style manual version) before deploy.
+      ddl-auto: update
+    open-in-view: false
+
+server:
+  port: 8080

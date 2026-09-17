@@ -1,0 +1,8 @@
+duckdb==1.5.5
+pandas
+polars
+pyarrow
+fastapi
+uvicorn[standard]
+pytest
+httpx

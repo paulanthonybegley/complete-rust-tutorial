@@ -1,0 +1,14 @@
+.run/
+**/target/
+**/__pycache__/
+**/.env
+**/.venv/
+.DS_Store
+analytics-with-duckdb/data/
+analytics-python-dataframes-with-duckdb/data/
+analytics-python-dataframes-with-duckdb/app/.venv/
+practical-applications-duckdb/data/
+practical-applications-duckdb/app/.venv/
+america-debt-crisis-world/data/
+america-debt-crisis-world/.venv/
+america-debt-crisis-world/notebooks/.ipynb_checkpoints/

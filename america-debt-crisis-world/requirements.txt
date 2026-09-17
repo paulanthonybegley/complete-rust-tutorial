@@ -1,0 +1,12 @@
+# America's Debt Crisis — notebook kernel dependencies.
+# Pin the DuckDB driver to the same version as the Docker CLI (v1.5.5):
+# .duckdb files are forward- but not backward-compatible across releases.
+duckdb==1.5.5
+pandas
+matplotlib
+jupyter
+nbclient
+nbconvert
+nbformat
+ipykernel
+pytest

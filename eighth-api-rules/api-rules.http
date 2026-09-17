@@ -1,0 +1,301 @@
+@baseUrl = http://localhost:8080
+@apiVersion = 1.1
+
+# ============================================================================
+#  Eighth API Rules — sequential endpoint tester (VS Code REST Client)
+# ============================================================================
+#  Prerequisite: run the app first
+#      cd eighth-api-rules/app && mvn spring-boot:run        (port 8080)
+#
+#  Run the requests in order, top to bottom. Comments mark expected responses,
+#  and several requests reference the response of an earlier one (e.g. the
+#  product created in Lesson 3). If you only execute a snippet, run its
+#  dependencies first.
+#
+#  Law 7 note: API versioning is required, so almost every request carries the
+#  "API-Version" header ({{apiVersion}} = 1.1). A request without it returns
+#  400 — Lesson 7 demonstrates this on purpose.
+
+# ============================================================================
+#  LESSON 1 — Design around resources, not actions
+#  The URL names a resource (products, orders); the HTTP method names the
+#  action. No /getProducts, /createOrder URLs anywhere.
+# ============================================================================
+
+### Lesson 1a — GET the products collection (resource, not action)
+###
+### > Expected: 200 — { "content": [ ... 4 seeded products ], "page": 0, ... }
+GET {{baseUrl}}/products
+API-Version: {{apiVersion}}
+
+### Lesson 1b — GET one order by id (same pattern works for retrieve/replace/delete)
+###
+### > Expected: 200 — order 1, status "CREATED", single item "Clean Code"
+GET {{baseUrl}}/orders/1
+API-Version: {{apiVersion}}
+
+### Lesson 1c — GET one product by id proves one URL serves many operations
+###
+### > Expected: 200 — product 1 "Clean Code" in the v1.1 shape
+GET {{baseUrl}}/products/1
+API-Version: {{apiVersion}}
+
+# ============================================================================
+#  LESSON 2 — Make URLs predictable
+#  Always-plural nouns, camelCase JSON, nested sub-resources:
+#  /orders/{id}/items is a predictable extension of /orders.
+# ============================================================================
+
+### Lesson 2a — List all exposed product endpoints in one place
+GET {{baseUrl}}/products
+API-Version: {{apiVersion}}
+
+### Lesson 2b — Nested sub-resource: items of order 1
+###
+### > Expected: 200 — [ { "productId": 1, "productName": "Clean Code", ... } ]
+GET {{baseUrl}}/orders/1/items
+API-Version: {{apiVersion}}
+
+### Lesson 2c — The orders collection uses the same plural-noun convention
+GET {{baseUrl}}/orders
+API-Version: {{apiVersion}}
+
+# ============================================================================
+#  LESSON 3 — Use HTTP methods for their actual purpose
+#  POST creates (201 + Location), PUT replaces, PATCH updates partially,
+#  DELETE removes (204). POST is not idempotent; PUT/DELETE are.
+# ============================================================================
+
+### Lesson 3a — POST creates a new product (NOT idempotent)
+###
+### > Expected: 201 + "Location: http://localhost:8080/products/5"
+### > This response is reused below, so run it before the PUT/PATCH/DELETE tests.
+# @name createProduct
+POST {{baseUrl}}/products
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "name": "Mechanical Keyboard",
+  "category": "electronics",
+  "price": 89.00,
+  "currency": "USD",
+  "stock": 25
+}
+
+### Lesson 3b — Follow the Location header of the product just created
+GET {{createProduct.response.headers.Location}}
+API-Version: {{apiVersion}}
+
+### Lesson 3c — PUT replaces the whole resource (idempotent)
+###
+### > Expected: 200 — product now named "Mechanical Keyboard Pro"
+PUT {{baseUrl}}/products/{{createProduct.response.body.$.id}}
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "name": "Mechanical Keyboard Pro",
+  "category": "electronics",
+  "price": 129.00,
+  "currency": "USD",
+  "stock": 25
+}
+
+### Lesson 3d — PATCH updates only the fields you send
+###
+### > Expected: 200 — price 99.00, name and stock untouched
+PATCH {{baseUrl}}/products/{{createProduct.response.body.$.id}}
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "price": 99.00
+}
+
+### Lesson 3e — DELETE removes the product (idempotent, answers 204)
+###
+### > Expected: 204 No Content. Re-running this block will 404 the first
+### > DELETE (already gone) — that itself is the "send it twice" lesson.
+DELETE {{baseUrl}}/products/{{createProduct.response.body.$.id}}
+API-Version: {{apiVersion}}
+
+# ============================================================================
+#  LESSON 4 — Make status codes useful
+#  Success: 200/201/204. Failures: 400, 404, 409, 422 — never "200 + error body".
+# ============================================================================
+
+### Lesson 4a — 404: the resource never existed
+###
+### > Expected: 404 — { "status": 404, "code": "PRODUCT_NOT_FOUND", ... }
+GET {{baseUrl}}/products/999
+API-Version: {{apiVersion}}
+
+### Lesson 4b — 422: request body fails validation
+###
+### > Expected: 422 — code "VALIDATION_FAILED" with fieldErrors for name/price/currency/stock
+POST {{baseUrl}}/products
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "category": "office",
+  "price": -1,
+  "currency": "U",
+  "stock": -5
+}
+
+### Lesson 4c — 409: conflict with the current state (insufficient stock)
+###
+### > Expected: 409 — code "INSUFFICIENT_STOCK". Desk Lamp (id 3) is seeded with 0 stock.
+POST {{baseUrl}}/orders
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "customerName": "Dave",
+  "items": [
+    {
+      "productId": 3,
+      "quantity": 1
+    }
+  ]
+}
+
+### Lesson 4d — 409: illegal status transition (order 1 is CREATED; CREATED → SHIPPED is not allowed)
+###
+### > Expected: 409 — code "INVALID_STATUS_TRANSITION"
+PATCH {{baseUrl}}/orders/1/status
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "status": "SHIPPED"
+}
+
+### Lesson 4e — 200: a legal transition (order 2 starts CONFIRMED; CONFIRMED → SHIPPED is allowed)
+###
+### > Expected: 200 — status "SHIPPED"
+### > Note: re-running this block afterwards yields 409 "ORDER_ALREADY_IN_STATUS".
+PATCH {{baseUrl}}/orders/2/status
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "status": "SHIPPED"
+}
+
+# ============================================================================
+#  LESSON 5 — Keep error responses consistent
+#  Every failure has the same six-field ApiError shape, signal to clients:
+#  status, code, message, timestamp, fieldErrors.
+# ============================================================================
+
+### Lesson 5a — Sample a 404 error container (machine + human fields)
+GET {{baseUrl}}/products/999
+API-Version: {{apiVersion}}
+
+### Lesson 5b — Sample a 422 with per-field errors (the 5th field carries detail)
+POST {{baseUrl}}/products
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "category": "office",
+  "price": -1,
+  "currency": "U",
+  "stock": -5
+}
+
+### Lesson 5c — 400: unknown enum value gets a consistent error body too
+###
+### > Expected: 400 — code "INVALID_STATUS"
+PATCH {{baseUrl}}/orders/1/status
+API-Version: {{apiVersion}}
+Content-Type: application/json
+
+{
+  "status": "FROZEN"
+}
+
+# ============================================================================
+#  LESSON 6 — Don't put everything into the URL path
+#  The path identifies the resource; query parameters refine the result;
+#  HTTP methods describe the operation. No ?action=delete anywhere.
+# ============================================================================
+
+### Lesson 6a — Filter by category (query parameter, not a path segment)
+###
+### > Expected: 200 — 2 "home" products (Desk Lamp, Tea Kettle)
+GET {{baseUrl}}/products?category=home
+API-Version: {{apiVersion}}
+
+### Lesson 6b — Filter by price range + availability
+###
+### > Expected: 200 — products priced 20–40 that are in stock
+GET {{baseUrl}}/products?minPrice=20&maxPrice=40&inStock=true
+API-Version: {{apiVersion}}
+
+### Lesson 6c — Sort and paginate
+###
+### > Expected: 200 — page 1 of size 2 ordered by price desc: [Desk Lamp, Digital Clock]
+GET {{baseUrl}}/products?sort=price:desc&page=1&size=2
+API-Version: {{apiVersion}}
+
+### Lesson 6d — Out-of-stock filter (Desk Lamp is the only seeded 0-stock item)
+###
+### > Expected: 200 — totalElements 1, the Desk Lamp
+GET {{baseUrl}}/products?inStock=false
+API-Version: {{apiVersion}}
+
+# ============================================================================
+#  LESSON 7 — Treat API changes carefully
+#  v1.0 returns the original payload; v1.1 adds currency/stock additively.
+#  The version comes from the API-Version header (see config/WebConfig.java).
+# ============================================================================
+
+### Lesson 7a — v1.0 contract (old shape: NO currency, NO stock)
+###
+### > Expected: 200 — { "id":1, "name":"Clean Code", ..., "price":39.99, "createdAt":"..." }
+GET {{baseUrl}}/products/1
+API-Version: 1.0
+
+### Lesson 7b — v1.1 contract (additive: +currency, +stock; old fields unchanged)
+### The diff between 7a and 7b is exactly the "additive, non-breaking change".
+GET {{baseUrl}}/products/1
+API-Version: {{apiVersion}}
+
+### Lesson 7c — No API-Version header is sent on purpose: 400 (version required)
+###
+### > Expected: 400 — Spring answers because versioning is enabled and required.
+GET {{baseUrl}}/products/1
+
+### Lesson 7d — Unsupported version is rejected: 400
+###
+### > Expected: 400 — 9.0 is not among the declared versions.
+GET {{baseUrl}}/products/1
+API-Version: 9.0
+
+# ============================================================================
+#  LESSON 8 — Keep request and response formats consistent
+#  camelCase keys, ISO-8601 dates, one Pagination envelope, one error shape.
+#  Note how every 200 collection below uses the exact same PageResponse JSON.
+# ============================================================================
+
+### Lesson 8a — The pagination envelope is identical across endpoints
+GET {{baseUrl}}/products
+API-Version: {{apiVersion}}
+
+### Lesson 8b — ...and the same envelope wraps orders
+GET {{baseUrl}}/orders
+API-Version: {{apiVersion}}
+
+### Lesson 8c — Dates are ISO-8601 across the whole API (createdAt, timestamp)
+GET {{baseUrl}}/orders/1
+API-Version: {{apiVersion}}
+
+### Lesson 8d — And the error shape is identical everywhere (compare Lesson 5)
+GET {{baseUrl}}/orders/999
+API-Version: {{apiVersion}}

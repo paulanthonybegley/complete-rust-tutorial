@@ -1,0 +1,158 @@
+@baseUrl = http://localhost:8083
+
+# ============================================================================
+#  Seven Database Laws — sequential endpoint tester (VS Code REST Client)
+# ============================================================================
+#  Prerequisite: PostgreSQL must be up, then run the app on 8083:
+#      make start        (suite: Postgres :5432, api-rules :8080, db-laws :8083)
+#  NOTE: the db-laws app listens on 8083 (8080 is the sibling api-rules app,
+#  which requires an API-Version header and would otherwise answer 400).
+#
+#  Run the requests in order, top to bottom. Comments mark expected responses,
+#  and several requests reference the response of an earlier one (e.g. the
+#  product created in the transaction lesson). If you only execute a snippet,
+#  run its dependencies first.
+
+# ============================================================================
+#  LESSON 1 — Start with the queries
+#  The schema exists because of the screens that read it. Every endpoint below
+#  is backed by an index whose name (idx_*) is the same as why it was created.
+# ============================================================================
+
+### Lesson 1a — Catalogue page: filter by category (served by idx_products_category)
+###
+### > Expected: 200 — totalElements 1, all content[].category == "grocery"
+GET {{baseUrl}}/products?category=grocery
+
+### Lesson 1b — Catalogue page: sort + paginate (served by idx_products_name)
+GET {{baseUrl}}/products?sort=price:desc&page=0&size=3
+
+### Lesson 1c — Customer order history (served by idx_orders_customer_id + order_items FK)
+###
+### > Expected: 200 — array of orders for customer 1, newest first
+GET {{baseUrl}}/customers/1/orders
+
+### Lesson 1d — Finance dashboard: sales grouped by month (served by idx_orders_created_at)
+###
+### > Expected: 200 — [ { "year":…, "month":…, "total":… } ] — GROUP BY ran in the DB
+GET {{baseUrl}}/stats/monthly-sales
+
+### Lesson 1e — Top customers by spend (aggregate access pattern)
+GET {{baseUrl}}/stats/top-customers
+
+# ============================================================================
+#  LESSON 2 — Ask what happens if the data is wrong
+#  POST /orders is ONE transaction: stock decrements + order rows commit
+#  together or roll back together. A failing later line undoes earlier lines.
+# ============================================================================
+
+### Lesson 2a — Create a fresh low-stock product for the demo
+# @name scarceProduct
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Rare Tool",
+  "category": "tools",
+  "price": 99.00,
+  "currency": "USD",
+  "stockQuantity": 1
+}
+
+### Lesson 2b — Buy it: stock drops atomically with the order row
+###
+### > Expected: 201 — totalAmount = unitPrice × quantity, status "CREATED"
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "customerName": "Demo Buyer",
+  "customerEmail": "buyer@example.com",
+  "items": [
+    { "productId": {{scarceProduct.response.body.$.id}}, "quantity": 1 }
+  ]
+}
+
+### Lesson 2c — Now try to oversell the last unit: whole transaction rolls back
+###
+### > Expected: 409 — code "INSUFFICIENT_STOCK". The product still has 1 unit.
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "customerName": "Greedy Buyer",
+  "customerEmail": "greedy@example.com",
+  "items": [
+    { "productId": {{scarceProduct.response.body.$.id}}, "quantity": 2 }
+  ]
+}
+
+### Lesson 2d — Proof: the guarded UPDATE rejected the over-sale (still 1)
+GET {{baseUrl}}/products/{{scarceProduct.response.body.$.id}}
+
+# ============================================================================
+#  LESSON 3 — Don't replace the database before finding the bottleneck
+#  The fixes are queries and indexes, not a new database. Run EXPLAIN ANALYZE
+#  (see exercises.md Lesson 3) and watch the plan use idx_products_category.
+# ============================================================================
+
+### Lesson 3a — The "slow" catalogue query is an Index Scan in disguise
+GET {{baseUrl}}/products?category=tools
+
+### Lesson 3b — Missing filter value: still a cheap parameterised index query
+GET {{baseUrl}}/products
+
+# ============================================================================
+#  LESSON 4 — Understand how it scales
+#  Read-heavy app: order history + catalogue consume the reads. The eager
+#  fetch below is a scaling win with no new database (kills the N+1).
+# ============================================================================
+
+### Lesson 4a — Order detail: items fetched in ONE query via @EntityGraph
+###
+### > Expected: 200 — order with its items[] array populated in a single query
+GET {{baseUrl}}/orders/1
+
+# ============================================================================
+#  LESSON 5 — Know when one database is enough
+#  Everything (catalogue, orders, reports) is one Postgres, and the tests run
+#  the same code on H2-in-memory with zero changes — see application-test.yml.
+# ============================================================================
+
+### Lesson 5a — One database answers the catalogue...
+GET {{baseUrl}}/products
+
+### Lesson 5b — ...and the reports, with no second store added
+GET {{baseUrl}}/stats/top-customers
+
+# ============================================================================
+#  LESSON 6 — Don't confuse fast with durable
+#  The app is fast (indexed reads) AND durable (Postgres WAL + fsync). H2 in
+#  tests is fast but NOT durable — the "fast vs durable" trade, on purpose.
+# ============================================================================
+
+### Lesson 6a — A committed order survives a restart (Postgres WAL), smoke-run
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "customerName": "Durability Check",
+  "customerEmail": "durable@example.com",
+  "items": [
+    { "productId": 3, "quantity": 1 }
+  ]
+}
+
+# ============================================================================
+#  LESSON 7 — Think about what happens after deployment
+#  docker-compose.yml gives healthchecks + a volume; schema-indexes.sql is the
+#  manual Flyway-style migration. Observe: curl the live container health.
+# ============================================================================
+
+### Lesson 7a — The DB reports healthy (broker/watchdogs rely on this)
+GET {{baseUrl}}/customers
+
+### Lesson 7b — Consistent error shape when the database says "not found"
+###
+### > Expected: 404 — { "status":404, "code":"PRODUCT_NOT_FOUND", ... }
+GET {{baseUrl}}/products/99999

@@ -1,0 +1,126 @@
+@baseUrl = http://localhost:8084
+
+# ============================================================================
+#  Analytics for Not-So-Big Data with DuckDB — sequential endpoint tester
+#  (VS Code REST Client)
+# ============================================================================
+#  Prerequisite: the shared database file must exist and the app must be up:
+#      docker compose up -d --build        # creates + seeds data/analytics.duckdb
+#      mvn -f app/pom.xml spring-boot:run  # http://localhost:8084
+#
+#  Run the requests in order, top to bottom. Comments mark expected responses.
+#  Every endpoint is read-only — nothing here mutates the database.
+
+# ============================================================================
+#  LESSON 1 — Medium data & dark data
+#  /database/info is the "look at the dataset" endpoint: the engine and the
+#  seeded row counts that match seed/seed.sql exactly.
+# ============================================================================
+
+### Lesson 1a — engine + dataset facts
+###
+### > Expected: 200 — { "duckdbVersion":"v1.3.1", "threads":8, ...,
+### >                    "orders":50000, "orderLines":249551, "events":300000,
+### >                    "tables":["country","customer","events","order_lines",
+### >                              "orders","product","v_completed_orders"] }
+GET {{baseUrl}}/database/info
+
+# ============================================================================
+#  LESSON 3 — Vectorized GROUP BY at 5 ms
+#  One GROUP BY, two joins, 224,508 completed lines -> 4 rows in milliseconds.
+# ============================================================================
+
+### Lesson 3a — revenue per category (the aggregation itself)
+###
+### > Expected: 200 — [{ "category":"electronics", "revenue":153862689.09 }, ...]
+### >            4 rows, electronics first (revenue DESC)
+GET {{baseUrl}}/analytics/revenue-by-category
+
+### Lesson 3b — the plan behind that number
+###
+### > Expected: 200 — plan contains "Total Time: 0.0053s", TABLE_SCAN x3,
+### >            HASH_JOIN x2, HASH_GROUP_BY "Aggregates: sum(#1)"
+GET {{baseUrl}}/analytics/explain?metric=revenue-by-category
+
+### Lesson 3c — a nearly-empty plan (one column, one group by)
+GET {{baseUrl}}/analytics/explain?metric=log-levels
+
+### Lesson 3d — unknown metric -> 400 (the whitelist protects the endpoint)
+###
+### > Expected: 400 — {"code":"BAD_REQUEST", "message":"unknown explain metric: ..."}
+GET {{baseUrl}}/analytics/explain?metric=drop-table-users
+
+# ============================================================================
+#  LESSON 4 — Joins, order & time buckets
+#  top-customers = 4-table join + TOP_N; revenue-trend = date_trunc day/month.
+# ============================================================================
+
+### Lesson 4a — the top givers (per spend)
+###
+### > Expected: 200 — 5 rows, spend DESC; #1 = Customer 40 (Argentina, 521950.68)
+GET {{baseUrl}}/analytics/top-customers
+
+### Lesson 4b — change the window: top 3
+###
+### > Expected: 200 — exactly 3 rows, same ordering
+GET {{baseUrl}}/analytics/top-customers?limit=3
+
+### Lesson 4c — the TOP_N node in the plan (keeps 5, doesn't sort everything)
+GET {{baseUrl}}/analytics/explain?metric=top-customers
+
+### Lesson 4d — revenue per month
+###
+### > Expected: 200 — 12 rows "2025-01-01"..."2025-12-01"; highest = August 14548731.83
+GET {{baseUrl}}/analytics/revenue-trend?bucket=month
+
+### Lesson 4e — revenue per day
+###
+### > Expected: 200 — 365 rows; highest day = 2025-07-31 (598642.81)
+GET {{baseUrl}}/analytics/revenue-trend?bucket=day
+
+### Lesson 4f — a bucket we did not implement -> 400
+###
+### > Expected: 400 — bucket must be 'day' or 'month'
+GET {{baseUrl}}/analytics/revenue-trend?bucket=year
+
+# ============================================================================
+#  LESSON 5 — Dark data in practice: logs
+#  300,000 event rows nobody read until now. INFO dominates; the needle is
+#  the ~0.1% FATAL bucket. All deterministic (MOD(abs(HASH(i)))).
+# ============================================================================
+
+### Lesson 5a — the histogram
+###
+### > Expected: 200 — 4 rows: ERROR 2751, FATAL 324, INFO 293835, WARN 3090
+GET {{baseUrl}}/analytics/log-levels
+
+### Lesson 5b — the same dark data, drilled down per service via the CLI
+###   docker compose exec duckdb duckdb /data/analytics.duckdb -c \
+###     "SELECT service, count(*) FROM events WHERE level='FATAL' \
+###      GROUP BY service ORDER BY count(*) DESC;"
+###   > gateway 122 > checkout 105 > cart 97  (gateway is the top offender)
+
+### Lesson 5c — orders split (the OLTP side of the same file)
+###
+### > Expected: 200 — [{ "status":"cancelled", "count":5008 },
+### >                    { "status":"completed", "count":44992 }]
+GET {{baseUrl}}/analytics/orders-by-status
+
+# ============================================================================
+#  LESSON 6 — Views, portability & the toolchain
+#  v_completed_orders appears in tables though it stores a query, not data.
+#  The whole database travels as one ~few-MB file (copy it /data and open it).
+# ============================================================================
+
+### Lesson 6a — the view shows up in the table list (= information_schema)
+GET {{baseUrl}}/database/info
+
+### Lesson 6b — CLI: the one-file story
+###   docker compose exec duckdb duckdb /data/analytics.duckdb -c "SELECT max(order_date) FROM orders;"
+###   > 2025-12-31
+###   cp /data/analytics.duckdb /data/copy.duckdb  &&  open the copy, same answer
+
+### Lesson 6c — CLI: COPY to Parquet (the toolchain tour)
+###   docker compose exec duckdb duckdb /data/analytics.duckdb \
+###     -c "COPY (SELECT category, count(1) AS n FROM product GROUP BY category) TO '/data/categories.parquet';"
+###   SELECT * FROM read_parquet('/data/categories.parquet');

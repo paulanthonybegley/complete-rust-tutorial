@@ -1,0 +1,9 @@
+# Tests run against an IN-MEMORY DuckDB engine, so `mvn test` needs no Docker.
+# The seed script runs in the shared connection (see DuckDbConfig), giving the
+# same 50k order / 300k event dataset the live app reads from its database file.
+duckdb:
+  url: "jdbc:duckdb:"
+
+logging:
+  level:
+    org.springframework: WARN

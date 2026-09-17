@@ -1,0 +1,20 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: analytics-with-duckdb
+
+# The course database is ONE file. The app embeds the DuckDB engine (JDBC) and
+# opens this file directly; the docker-compose "duckdb" service supervises the
+# SAME file through the ./data bind mount so learners can also poke it with the
+# CLI (`docker compose exec duckdb duckdb /data/analytics.duckdb`).
+#
+#   jdbc:duckdb:            -> in-memory (used by tests)
+#   jdbc:duckdb:../data/... -> single-file database, no server, no port
+duckdb:
+  url: ${DUCKDB_URL:"jdbc:duckdb:../data/analytics.duckdb"}
+
+logging:
+  level:
+    org.springframework: WARN

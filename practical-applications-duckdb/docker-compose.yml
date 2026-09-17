@@ -1,0 +1,13 @@
+services:
+  duckdb:
+    build: .
+    container_name: duckdb-practical
+    volumes:
+      - ${DUCKDB_DATA:-./data}:/data
+    environment:
+      DUCKDB_FILE: /data/analytics.duckdb
+    healthcheck:
+      test: ["CMD", "duckdb", "/data/analytics.duckdb", "-c", "SELECT count(*) FROM employees"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
