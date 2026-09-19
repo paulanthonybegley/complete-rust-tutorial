@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="page-head">
+			<h1>Timeline of the speech</h1>
+			<p class="lead">Last year's progress → the speech → what's next. The video tells this exact story;
+				filter by theme without reloading the page.</p>
+		</section>
+
+		<div class="chips">
+			<button class="chip" th:classappend="${selected == null} ? ' active'" hx-get="/timeline/grid"
+				hx-target="#tl-grid" th:attr="hx-push-url=${'/timeline'}">All</button>
+			<button class="chip" th:each="c : ${navCategories}" th:classappend="${selected == c} ? ' active'"
+				th:attr="hx-get=${'/timeline/grid?cat=' + c},hx-push-url=${'/timeline?cat=' + c}"
+				hx-target="#tl-grid" th:text="${c.label}">Theme</button>
+		</div>
+
+		<div id="tl-grid" th:insert="~{_fragments :: timelineGrid}"></div>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

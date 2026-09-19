@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="page-head">
+			<h1>Partners & trade</h1>
+			<p class="lead">The diversification half of independence: who's in, who's coming and who's watching.</p>
+		</section>
+
+		<div class="chips">
+			<button class="chip active" hx-get="/partners/group" hx-target="#groups" th:attr="hx-push-url=${'/partners'}">All
+				groups</button>
+			<button class="chip" th:each="k : ${T(com.example.euind.model.PartnerKind).values()}"
+				th:attr="hx-get=${'/partners/group?kind=' + k},hx-push-url=${'/partners?kind=' + k}"
+				hx-target="#groups" th:text="${k.label}">Kind</button>
+		</div>
+
+		<div id="groups">
+			<th:block th:insert="~{_fragments :: partnerGroups}"></th:block>
+		</div>
+
+		<div class="notice">
+			<strong>Associate membership</strong> is the through-line: a status that <em>doesn't formally exist
+			yet</em>, first pitched for Ukraine, now offered to Canada. That gap — announcement vs treaty — is the
+			whole media-literacy lesson (see <a th:href="@{/sources}">Sources</a>).
+		</div>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

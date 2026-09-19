@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="page-head">
+			<h1>Flashcard decks</h1>
+			<p class="lead">Flip a card (click it) or hit <strong>shuffle</strong> to drill the vocabulary of the
+				speech. Filter by theme.</p>
+		</section>
+
+		<div id="spotlight" class="spotlight">
+			<th:block th:insert="~{_fragments :: flashcardCard}"></th:block>
+			<div class="spot-actions">
+				<button class="btn" hx-get="/flashcards/next" hx-target="#spotlight" hx-swap="innerHTML">🔀
+					Shuffle</button>
+			</div>
+		</div>
+
+		<div class="chips">
+			<button class="chip" th:classappend="${selected == null} ? ' active'" hx-get="/flashcards/grid"
+				hx-target="#flip-grid" th:attr="hx-push-url=${'/flashcards'}">All</button>
+			<button class="chip" th:each="c : ${navCategories}" th:classappend="${selected == c} ? ' active'"
+				th:attr="hx-get=${'/flashcards/grid?cat=' + c},hx-push-url=${'/flashcards?cat=' + c}"
+				hx-target="#flip-grid" th:text="${c.label}">Theme</button>
+		</div>
+
+		<div id="flip-grid" th:insert="~{_fragments :: flashcardGrid}"></div>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

@@ -8,6 +8,7 @@
 #    analytics-with-duckdb   DuckDB CLI container (shared file DB)   (docker)
 #    analytics-with-duckdb/app Spring Boot 4 analytics API          :8084
 #    america-debt-crisis-world  Jupyter notebook course (DuckDB file + CLI)  (docker; tests are venv-only)
+#    eu-independence (standalone)  Spring Boot 4 + Thymeleaf + htmx course :8091
 #
 #  Idempotency: `make start` on an already-running suite is a no-op that
 #  reports what is already up; `make stop` on an already-stopped suite
@@ -21,6 +22,7 @@ RULES_APP   := eighth-api-rules
 DBLAWS_APP  := seven-database-laws
 ANAL_APP    := analytics-with-duckdb
 DEBT_APP    := america-debt-crisis-world
+EU_APP      := eu-independence
 COMPOSE          := $(DBLAWS_APP)/docker-compose.yml
 COMPOSE_ANALYTICS := $(ANAL_APP)/docker-compose.yml
 COMPOSE_DEBT := $(DEBT_APP)/docker-compose.yml
@@ -34,6 +36,7 @@ ANALYTICS_URL := $(shell awk -F= '/^DUCKDB_DATA=/{print "jdbc:duckdb:"$$2"/analy
 PORT_RULES     ?= 8080
 PORT_DBLAWS    ?= 8083
 PORT_ANALYTICS ?= 8084
+PORT_EU        ?= 8091
 
 # Spring Boot 4.1.1 is supported up to Java 26. sdkman may point JAVA_HOME at
 # the 27-ea "current" JDK, which breaks the build, so prefer JDK 24 when the
@@ -45,7 +48,7 @@ export JAVA_HOME
 .PHONY: all help start stop restart status logs test clean \
         start-apps stop-apps start-db stop-db start-duckdb stop-duckdb \
         start-rules stop-rules start-dblaws stop-dblaws \
-        start-analytics stop-analytics \
+        start-analytics stop-analytics start-euind stop-euind \
         start-debt-db stop-debt-db
 
 # ----------------------------------------------------------------------------
@@ -137,6 +140,7 @@ status:
 	@echo "duckdb file DB   : $$(docker ps --filter name=duckdb-analytics --format '{{.Status}}' 2>/dev/null | grep -q . && echo 'Up (container)' || echo 'down')"
 	@echo "duckdb-debt CLI  : $$(docker ps --filter name=duckdb-debt --format '{{.Status}}' 2>/dev/null | grep -q . && echo 'Up (container)' || echo 'down')"
 	@echo "analytics        : $$(lsof -tiTCP:$(PORT_ANALYTICS) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_ANALYTICS)' || echo 'down')"
+	@echo "eu-independence  : $$(lsof -tiTCP:$(PORT_EU) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_EU)' || echo 'down')"
 
 logs:
 	@echo "==> tailing $(RUN_DIR)/*.log (Ctrl-C to detach)"
@@ -150,6 +154,8 @@ test:
 	+mvn -B -f $(DBLAWS_APP)/app/pom.xml test
 	@echo "==> Testing analytics-with-duckdb (in-memory DuckDB, no Docker needed)"
 	+mvn -B -f $(ANAL_APP)/app/pom.xml test
+	@echo "==> Testing eu-independence (Thymeleaf + htmx course, no Docker needed)"
+	+mvn -B -f $(EU_APP)/app/pom.xml test
 	@echo "==> Testing america-debt-crisis-world (seed + model + notebook smoke tests, no Docker needed)"
 	+if [ -x $(DEBT_APP)/.venv/bin/pytest ]; then \
 	  cd $(DEBT_APP) && .venv/bin/pytest -q; \
@@ -188,6 +194,12 @@ start-analytics: start-duckdb
 
 stop-analytics:
 	@$(call stop_spring_app,$(ANAL_APP),$(PORT_ANALYTICS))
+
+start-euind:
+	@$(call start_spring_app,$(EU_APP),$(PORT_EU))
+
+stop-euind:
+	@$(call stop_spring_app,$(EU_APP),$(PORT_EU))
 
 start-db:
 	@docker info >/dev/null 2>&1 \
@@ -269,8 +281,10 @@ help:
 	@echo "  make start-rules    api-rules only        |  make stop-rules"
 	@echo "  make start-dblaws   db-laws only (+ db)   |  make stop-dblaws"
 	@echo "  make start-analytics analytics only (+duckdb) |  make stop-analytics"
+	@echo "  make start-euind    eu-independence only  |  make stop-euind"
 	@echo "  make start-apps     apps only             |  make stop-apps"
 	@echo "  make clean          remove logs + pid files"
 	@echo ""
 	@echo "  Ports (override with e.g. 'make start PORT_RULES=9090'):"
 	@echo "    api-rules :$(PORT_RULES)   db-laws :$(PORT_DBLAWS)   analytics :$(PORT_ANALYTICS)   postgres :5432"
+	@echo "    eu-independence :$(PORT_EU)   (standalone)"

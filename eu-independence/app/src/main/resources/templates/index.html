@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+
+		<section class="hero">
+			<p class="kicker">State of the European Union · 16 September 2026</p>
+			<h1>Strongest <span class="gold">yet</span> precarious.</h1>
+			<p class="lead">
+				The whole speech is one idea: <strong>independence</strong>. Decoupling from Russia, China and the US
+				across energy, materials, defence, money, tech — and a plan to get there. Explore every feature of the
+				video below.
+			</p>
+
+			<div class="meter-row">
+				<div class="meter-label">Independence meter <span class="muted">(share of proposals already moving)</span></div>
+				<div class="meter">
+					<div class="meter-fill" th:style="'width:' + ${meter} + '%'" th:attr="data-value=${meter}">
+						<span th:text="${meter} + '%'">60%</span>
+					</div>
+				</div>
+				<p class="muted small" th:text="${meterNote}">note</p>
+			</div>
+		</section>
+
+		<section>
+			<h2 class="section-title">One stat per theme</h2>
+			<div class="grid tiles">
+				<a class="tile" th:each="c : ${navCategories}" th:href="@{/policies(cat=${c})}">
+					<span class="tile-count" th:text="${counts.get(c)}">0</span>
+					<span class="tile-name" th:text="${c.label}">Theme</span>
+					<span class="tile-hint">open explorer →</span>
+				</a>
+			</div>
+		</section>
+
+		<section>
+			<h2 class="section-title">Four features to start with</h2>
+			<div class="grid cards">
+				<article class="card" th:each="p : ${featured}">
+					<div class="card-top">
+						<span class="badge" th:text="${p.category.label}">Category</span>
+						<span class="status" th:classappend="'st-' + ${#strings.toLowerCase(p.status.name())}"
+							th:text="${p.status.label}">Status</span>
+					</div>
+					<h3 th:text="${p.title}">Title</h3>
+					<p class="summary" th:text="${p.summary}">Summary</p>
+					<a class="btn" th:href="@{/policies}">In the explorer →</a>
+				</article>
+			</div>
+		</section>
+
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

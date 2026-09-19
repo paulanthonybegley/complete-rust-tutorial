@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="page-head">
+			<h1>The Independence Lab</h1>
+			<p class="lead">Three transparent simulators. Drag a slider or tick a box and the model recomputes in
+				place — no page reloads. Each model's assumptions are stated so you can argue with them.</p>
+		</section>
+
+		<!-- ======================================================== ENERGY -->
+		<section class="sim" id="sim-energy">
+			<h2>⚡ Energy to 2040</h2>
+			<p class="subtitle" th:text="${energyContext.subtitle}">cutting the import bill</p>
+			<p class="summary" th:text="${energyContext.summary}">context</p>
+			<p class="muted small">Base case: electricity bears <strong>22%</strong> of European energy use today;
+				the 2040 target doubles it (44%). The saving scales with how much of the target you hit.</p>
+
+			<label class="slider">
+				<span>Electricity share by 2040: <strong id="energy-val">44%</strong></span>
+				<input type="range" min="15" max="70" value="44" name="share"
+					oninput="document.getElementById('energy-val').textContent = this.value + '%'"
+					hx-get="/lab/energy" hx-target="#energy-result" hx-swap="innerHTML"
+					hx-trigger="input changed delay:120ms" />
+			</label>
+
+			<div id="energy-result" th:insert="~{_fragments :: energyResult}"></div>
+		</section>
+
+		<!-- ==================================================== MATERIALS -->
+		<section class="sim" id="sim-materials">
+			<h2>🧲 Critical materials exposure</h2>
+			<p class="subtitle" th:text="${labContext.subtitle}">crunch reserves</p>
+			<p class="summary" th:text="${labContext.summary}">context</p>
+			<p class="muted small">Today ~90% of the EU's critical-material imports come from one supplier (China).
+				Drag the concentration and watch the grade, the stockpile clock and the industry exposure change.</p>
+
+			<label class="slider">
+				<span>Single-supplier share of imports: <strong id="mat-val">90%</strong></span>
+				<input type="range" min="40" max="95" value="90" name="share"
+					oninput="document.getElementById('mat-val').textContent = this.value + '%'"
+					hx-get="/lab/materials" hx-target="#materials-result" hx-swap="innerHTML"
+					hx-trigger="input changed delay:120ms" />
+			</label>
+
+			<div id="materials-result" th:insert="~{_fragments :: materialsResult}"></div>
+		</section>
+
+		<!-- ======================================================= COUNCIL -->
+		<section class="sim" id="sim-council">
+			<h2>🛡️ European Security Council builder</h2>
+			<p class="subtitle" th:text="${councilContext.subtitle}">security summit without Washington</p>
+			<p class="summary" th:text="${councilContext.summary}">context</p>
+			<p class="muted small">Permanent members (France, Germany, Italy, Spain, Poland) are locked in per the
+				video. Add rotating members and external partners — the score rewards population coverage, East–West
+				balance, small states and global reach.</p>
+
+			<form hx-get="/lab/council" hx-target="#council-result" hx-swap="innerHTML" hx-trigger="change">
+				<fieldset class="member-grid">
+					<legend>Permanent members</legend>
+					<label class="member locked" th:each="m : ${permanent}">
+						<input type="checkbox" checked disabled />
+						<span class="flag" th:text="${m.flag()}">🇪🇺</span>
+						<span th:text="${m.country()}">Country</span>
+					</label>
+				</fieldset>
+
+				<fieldset class="member-grid">
+					<legend>Rotating members</legend>
+					<label class="member" th:each="m : ${rotating}">
+						<input type="checkbox" name="members" th:value="${m.id()}"
+							th:checked="${chosen != null and chosen.contains(m.id())}" />
+						<span class="flag" th:text="${m.flag()}">🇪🇺</span>
+						<span th:text="${m.country()}">Country</span>
+						<span class="muted small" th:text="${m.rationale()}">reason</span>
+					</label>
+				</fieldset>
+
+				<fieldset class="member-grid">
+					<legend>External partners</legend>
+					<label class="member external" th:each="e : ${external}">
+						<input type="checkbox" name="partnersIn" th:value="${e.id()}"
+							th:checked="${chosenPartners != null and chosenPartners.contains(e.id())}" />
+						<span class="flag" th:text="${e.flag()}">🇨🇦</span>
+						<span th:text="${e.country()}">Country</span>
+						<span class="muted small" th:text="${e.rationale()}">status</span>
+					</label>
+				</fieldset>
+
+				<button class="btn" type="submit">Recalculate council</button>
+			</form>
+
+			<div id="council-result" th:insert="~{_fragments :: councilResult}"></div>
+		</section>
+
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

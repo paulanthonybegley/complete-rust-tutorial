@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="page-head">
+			<h1>Sources & the framing test</h1>
+			<p class="lead">The video reported that <strong th:text="${sourceCount} + ' outlets'">157 outlets</strong>
+				were already covering the speech. Same facts, very different news frames.</p>
+		</section>
+
+		<div class="grid frames" th:each="f : ${frames}">
+			<article class="card" th:classappend="'frame-' + ${f.corner()}">
+				<div class="card-top">
+					<span class="badge" th:text="${f.corner()}">corner</span>
+				</div>
+				<h3 th:text="${f.headline()}">Headline</h3>
+				<p th:text="${f.body()}">Body</p>
+			</article>
+		</div>
+
+		<section class="sim">
+			<h2>📋 Before you share — five checks</h2>
+			<ol class="checklist">
+				<li><strong>Source & date</strong> — who published, and when? A week-old claim about a speech is
+					different from today's.</li>
+				<li><strong>Primary text</strong> — go to the actual speech transcript, not a summary of a summary.</li>
+				<li><strong>Two frames</strong> — read one left-leaning and one right-leaning account of the same
+					story and list what each emphasises.</li>
+				<li><strong>Ownership</strong> — an outlet's owner and funding tell you which interests it serves.</li>
+				<li><strong>The figure</strong> — confirm the statistic is quoted (90%, 16%, €260bn, 157…) against a
+					primary or named source.</li>
+			</ol>
+		</section>
+
+		<section class="sim">
+			<h2>🔗 Primary & press sources used in this course</h2>
+			<ul class="checklist">
+				<li>Video transcript: <a href="https://www.youtube.com/watch?v=ec_4Un6JrAY" target="_blank"
+						rel="noopener">Von der Leyen's New Plan for European Independence Explained</a> (TLDR News EU)</li>
+				<li><a href="https://www.reuters.com/world/americas/eus-von-der-leyen-backs-european-security-council-playbook-against-sabotage-2026-09-16/"
+						target="_blank" rel="noopener">Reuters — EU's von der Leyen backs European Security Council and
+						'playbook' against sabotage</a></li>
+				<li><a href="https://www.euronews.com/my-europe/2026/09/17/inside-von-der-leyens-pitch-for-a-new-eu-security-architecture"
+						target="_blank" rel="noopener">Euronews — Inside von der Leyen's pitch for a new EU security
+						architecture</a></li>
+				<li><a href="https://www.politico.eu/article/ursula-von-der-leyen-mark-carney-europe-world-middle-powers/"
+						target="_blank" rel="noopener">Politico — Von der Leyen fleshes out Carney's vision of Europe as
+						leader of the world's middle powers</a></li>
+				<li><a href="https://new.intellinews.com/articles/europe-is-surrounded-by-enemies-and-must-rearm-invest-and-innovate-von-der-leyen-468253"
+						target="_blank" rel="noopener">intellinews — the speech as a nine-point package</a></li>
+			</ul>
+			<p class="muted small">Each figure in the <a th:href="@{/policies}">policy explorer</a> is traceable to
+				one of these; the <strong>lab models</strong> are deliberately simplified so you can challenge the
+				assumptions.</p>
+		</section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

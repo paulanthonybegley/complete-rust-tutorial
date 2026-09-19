@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="page-head">
+			<h1>Check your understanding</h1>
+			<p class="lead">Answer in place with htmx — each card grades itself and explains the correct answer.
+				Lesson 9 (media literacy) asks you to verify the *claims* behind these facts too.</p>
+		</section>
+
+		<th:block th:insert="~{_fragments :: quizGrid}"></th:block>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

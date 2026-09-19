@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head></head>
+
+<body>
+
+	<!-- Shared htmx fragments. This template is never rendered as a page;
+	     every controller returns a fragment by name, and page templates insert
+	     one. Keeping them here stops Thymeleaf double-rendering fragment bodies
+	     on a normal page render. -->
+
+	<!-- ==================================================== policies -->
+	<th:block th:fragment="policiesGrid">
+		<div class="grid cards">
+			<article class="card" th:each="p : ${items}">
+				<div class="card-top">
+					<span class="badge" th:text="${p.category.label}">Category</span>
+					<span class="status" th:classappend="'st-' + ${#strings.toLowerCase(p.status.name())}"
+						th:text="${p.status.label}">Status</span>
+				</div>
+				<h3 th:text="${p.title}">Title</h3>
+				<p class="subtitle" th:if="${p.subtitle != null}" th:text="${p.subtitle}">Subtitle</p>
+				<p class="summary" th:text="${p.summary}">Summary</p>
+				<button class="btn open" th:attr="hx-get=${'/policies/detail?id=' + p.id}"
+					hx-target="#policy-detail" hx-swap="outerHTML">
+					Open →
+				</button>
+			</article>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="policyDetail">
+		<div id="policy-detail" class="drawer open" th:if="${policy != null}">
+			<div class="detail-inner">
+				<div class="detail-head">
+					<span class="badge" th:text="${policy.category.label}">Category</span>
+					<span class="status" th:classappend="'st-' + ${#strings.toLowerCase(policy.status.name())}"
+						th:text="${policy.status.label}">Status</span>
+					<button class="chip close" type="button"
+						onclick="var d=document.getElementById('policy-detail');d.classList.remove('open');d.innerHTML='';">✕
+						close</button>
+				</div>
+				<h3 th:text="${policy.title}">Title</h3>
+				<p class="subtitle" th:text="${policy.subtitle}">Subtitle</p>
+				<p class="lead" th:text="${policy.summary}">Summary</p>
+
+				<h4>In the speech</h4>
+				<ul class="bullets">
+					<li th:each="d : ${policy.detail()}" th:text="${d}">detail</li>
+				</ul>
+
+				<h4>The numbers</h4>
+				<div class="figures">
+					<div class="figure" th:each="f : ${policy.figures()}">
+						<span class="fv" th:text="${f.value()}">value</span>
+						<span class="fl" th:text="${f.label()}">label</span>
+						<span class="fn" th:text="${f.note()}">note</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="policy-detail" class="drawer open" th:if="${missing != null}">
+			<div class="notice">
+				No policy card with id <code th:text="${missing}">🇪🇺</code> — check the id in the data catalogue.
+			</div>
+		</div>
+	</th:block>
+
+	<!-- ==================================================== timeline -->
+	<th:block th:fragment="timelineGrid">
+		<ol class="timeline">
+			<li class="tl-event" th:each="e : ${events}">
+				<span class="tl-when" th:text="${e.when()}">2026</span>
+				<div class="tl-body">
+					<span class="badge" th:text="${e.category().label}">Theme</span>
+					<h3 th:text="${e.title()}">Event</h3>
+					<p th:text="${e.summary()}">Summary</p>
+				</div>
+			</li>
+		</ol>
+		<p class="muted small" th:if="${#lists.isEmpty(events)}">Nothing in this theme — pick another filter.</p>
+	</th:block>
+
+	<!-- ======================================================== lab -->
+	<th:block th:fragment="energyResult">
+		<div class="result" th:classappend="${energy.atTarget()} ? ' good' : ' warn'">
+			<div class="big-stat">
+				<span class="bv" th:text="${energy.targetShare()} + '%'">44%</span>
+				<span class="bl">electricity share at 2040</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv gold" th:text="'€' + ${energy.importSavingBillion()} + 'bn'">€260bn</span>
+				<span class="bl">fossil import bill cut / year</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${energy.gridBacklogMW() / 1000} + ' GW'">480 GW</span>
+				<span class="bl">still waiting for a grid socket</span>
+			</div>
+			<p class="verdict" th:unless="${energy.atTarget()}"
+				th:text="'Below the target: you need ' + (44.0 - ${energy.targetShare()}) + ' more points to hit the '
+					+ '€260bn saving.'">verdict</p>
+			<p class="verdict good-txt" th:if="${energy.atTarget()}"
+				th:text="'At the target — this is the €260bn/yr saving the Commission quotes.'">verdict</p>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="materialsResult">
+		<div class="result" th:classappend="'g-' + ${#strings.toLowerCase(materials.grade().name())}">
+			<div class="big-stat">
+				<span class="bv" th:text="${#numbers.formatDecimal(materials.chinaSharePct(), 1, 0)} + '%'">90%</span>
+				<span class="bl">single-supplier share</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${materials.grade().label}">SEVERE</span>
+				<span class="bl" th:text="${materials.grade().reading}">reading</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${materials.stockpileDays()} + ' days'">80 days</span>
+				<span class="bl">of stock the stockpile covers</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${#numbers.formatDecimal(materials.conditionalImpact(), 1, 0)} + '%'">81%</span>
+				<span class="bl">of strategic industry exposed</span>
+			</div>
+			<p class="verdict" th:text="'The Commission‘s answer is joint procurement + stockpiles: buying time at '
+				+ ${materials.stockpileDays()} + ' days while alternatives come online.'">verdict</p>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="councilResult">
+		<div class="result council">
+			<div class="big-stat">
+				<span class="bv" th:text="${council.coveragePct()} + '%'">66%</span>
+				<span class="bl">of EU population covered</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv gold" th:text="'+' + ${council.balanceBonus()}">+20</span>
+				<span class="bl">balance bonus (east/north/small/global)</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${council.total()} + '/100'">86</span>
+				<span class="bl">legitimacy score</span>
+			</div>
+			<p class="verdict" th:text="${council.verdict()}">verdict</p>
+		</div>
+		<p class="muted small">Model: score = population coverage + bonuses for East (+10), North (+5), small states
+			(+5 each, cap 10) and external partners (+5 each, cap 10).
+
+		</p>
+	</th:block>
+
+	<!-- ======================================================== quiz -->
+	<th:block th:fragment="quizGrid">
+		<div class="quiz-grid">
+			<div class="qcard" th:each="q : ${questions}" th:id="${'q-' + q.id()}">
+				<div class="card-top">
+					<span class="badge" th:text="${q.category().label}">Theme</span>
+					<span class="status st-proposal"><span th:text="${#strings.toUpperCase(q.id())}">Q1</span></span>
+				</div>
+				<h3 th:text="${q.prompt()}">Prompt</h3>
+				<form hx-post="/quiz/answer" th:attr="hx-target=${'#q-' + q.id()}" hx-swap="outerHTML">
+					<input type="hidden" name="q" th:value="${q.id()}" />
+					<label class="option" th:each="opt : ${q.options()}">
+						<input type="radio" name="choice" th:value="${opt}" required />
+						<span th:text="${opt}">Option</span>
+					</label>
+					<button class="btn" type="submit">Check answer</button>
+				</form>
+			</div>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="quizQuestion">
+		<th:block th:if="${q != null}">
+			<div class="qcard" th:id="${'q-' + q.id()}">
+				<div class="card-top">
+					<span class="badge" th:text="${q.category().label}">Theme</span>
+					<span class="status st-proposal"><span th:text="${#strings.toUpperCase(q.id())}">Q1</span></span>
+				</div>
+				<h3 th:text="${q.prompt()}">Prompt</h3>
+				<form hx-post="/quiz/answer" th:attr="hx-target=${'#q-' + q.id()}" hx-swap="outerHTML">
+					<input type="hidden" name="q" th:value="${q.id()}" />
+					<label class="option" th:each="opt : ${q.options()}">
+						<input type="radio" name="choice" th:value="${opt}" required />
+						<span th:text="${opt}">Option</span>
+					</label>
+					<button class="btn" type="submit">Check answer</button>
+				</form>
+			</div>
+		</th:block>
+	</th:block>
+
+	<th:block th:fragment="quizAnswered">
+		<th:block th:if="${result != null}" th:with="q=${result['question']}, correct=${result['correct']}">
+			<div class="qcard" th:id="${'q-' + q.id()}" th:classappend="${correct} ? ' ok' : ' bad'">
+				<div class="card-top">
+					<span class="badge" th:text="${q.category().label}">Theme</span>
+					<span class="status" th:classappend="${correct} ? ' st-in_progress' : ' st-blocked'"
+						th:text="${correct} ? 'Correct' : 'Not quite'">Result</span>
+				</div>
+				<h3 th:text="${q.prompt()}">Prompt</h3>
+				<p class="verdict">
+					<span th:unless="${correct}"
+						th:text="'You picked: ' + ${result['chosen']} + '. Expected: ' + ${result['expected']} + '.'"></span>
+					<span th:text="${q.explanation()}">Explanation</span>
+				</p>
+				<button class="btn" th:attr="hx-get=${'/quiz/question?q=' + q.id()}" hx-target="this" hx-swap="outerHTML">
+					Try another answer
+				</button>
+			</div>
+		</th:block>
+	</th:block>
+
+	<!-- ================================================== flashcards -->
+	<th:block th:fragment="flashcardCard">
+		<div class="flip">
+			<input type="checkbox" class="flip-toggle" id="flip-card" />
+			<div class="flipper">
+				<label class="face front" for="flip-card">
+					<span class="badge" th:text="${card.category().label}">Theme</span>
+					<h3 th:text="${card.front()}">Term</h3>
+					<p class="muted">click to flip ↓</p>
+				</label>
+				<label class="face back" for="flip-card">
+					<p th:text="${card.back()}">Definition</p>
+				</label>
+			</div>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="flashcardGrid">
+		<div class="flip-grid deck">
+			<div class="flip" th:each="c,row : ${deck}" th:with="ck='c' + ${row.index}">
+				<input type="checkbox" class="flip-toggle" th:id="${'flip-' + ck}" />
+				<div class="flipper">
+					<label class="face front" th:for="${'flip-' + ck}">
+						<span class="badge" th:text="${c.category().label}">Theme</span>
+						<h3 th:text="${c.front()}">Term</h3>
+						<p class="muted">click to flip ↓</p>
+					</label>
+					<label class="face back" th:for="${'flip-' + ck}">
+						<p th:text="${c.back()}">Definition</p>
+					</label>
+				</div>
+			</div>
+		</div>
+		<p class="muted small" th:if="${#lists.isEmpty(deck)}">No cards in this theme.</p>
+	</th:block>
+
+	<!-- ===================================================== partners -->
+	<th:block th:fragment="partnerGroups">
+		<section class="pgroup" th:each="entry : ${groups}" th:with="pk=${entry.key}">
+			<h2 th:text="${pk.label}">Kind</h2>
+			<div class="grid cards partners">
+				<article class="card partner" th:each="p : ${entry.value}">
+					<div class="card-top">
+						<span class="flag big" th:text="${p.flag()}">🇪🇺</span>
+						<span class="status st-in_progress" th:text="${p.status()}">Status</span>
+					</div>
+					<h3 th:text="${p.country()}">Country</h3>
+					<p class="summary" th:text="${p.note()}">Note</p>
+				</article>
+			</div>
+		</section>
+	</th:block>
+
+</body>
+
+</html>

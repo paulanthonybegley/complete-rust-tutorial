@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="page-head">
+			<h1>Policy explorer</h1>
+			<p class="lead">Every feature raised in the video, as a card. Filter by theme; click
+				<strong>open</strong> to read the detail and its numbers.
+			</p>
+		</section>
+
+		<div class="chips">
+			<button class="chip" th:classappend="${selected == null} ? ' active'"
+				hx-get="/policies/grid" hx-target="#policy-grid" th:attr="hx-push-url=${'/policies'}">All
+				<span class="muted" th:text="'(' + ${items.size()} + ')'">(0)</span></button>
+			<button class="chip" th:each="c : ${navCategories}"
+				th:classappend="${selected == c} ? ' active'"
+				th:attr="hx-get=${'/policies/grid?cat=' + c},hx-push-url=${'/policies?cat=' + c}"
+				hx-target="#policy-grid" th:text="${c.label}">Theme</button>
+		</div>
+
+		<div id="policy-grid" th:insert="~{_fragments :: policiesGrid}"></div>
+
+		<div id="policy-detail" class="drawer"></div>
+
+		<div class="notice">Every theme below has a lesson in
+			<code>lesson_plans.md</code> (L1 the speech · L2 economy · L3 materials · L4 defence · L5 energy · L6
+			climate · L7 AI · L8 partnerships · L9 media).</div>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>
