@@ -64,7 +64,8 @@ class EuIndependenceApplicationTests {
 	void policyDetailOpensTheDrawerForHtmx() throws Exception {
 		mockMvc.perform(get("/policies/detail").param("id", "def-council"))
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("class=\"drawer open\"")));
+				.andExpect(content().string(containsString("class=\"drawer open\"")))
+				.andExpect(content().string(containsString("scrollIntoView")));
 	}
 
 	@Test

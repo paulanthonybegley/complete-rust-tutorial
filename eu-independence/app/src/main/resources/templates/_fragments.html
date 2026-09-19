@@ -59,6 +59,9 @@
 					</div>
 				</div>
 			</div>
+			<script>
+				document.getElementById('policy-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+			</script>
 		</div>
 
 		<div id="policy-detail" class="drawer open" th:if="${missing != null}">
