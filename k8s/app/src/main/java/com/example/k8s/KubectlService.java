@@ -53,6 +53,9 @@ public class KubectlService {
 		if (t.isEmpty()) {
 			return usage();
 		}
+		if (t.get(0).equalsIgnoreCase("kubectl")) {
+			t.remove(0);
+		}
 		String verb = t.get(0).toLowerCase();
 		try {
 			return switch (verb) {

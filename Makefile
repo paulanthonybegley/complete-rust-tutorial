@@ -10,12 +10,13 @@
 #    america-debt-crisis-world  Jupyter notebook course (DuckDB file + CLI)  (docker; tests are venv-only)
 #    eu-independence (standalone)  Spring Boot 4 + Thymeleaf + htmx course :8091
 #    devops-zero-hero (standalone) Spring Boot 4 + Thymeleaf + htmx course :8092
+#    k8s (standalone) kubectl simulator for the DevOps course             :8093
 #
 #  Idempotency: `make start` on an already-running suite is a no-op that
 #  reports what is already up; `make stop` on an already-stopped suite
 #  succeeds silently. Ports are overridable:
 #
-#    make start PORT_RULES=9090 PORT_DBLAWS=9093 PORT_ANALYTICS=9084 PORT_DEVOPS=9092
+#    make start PORT_RULES=9090 PORT_DBLAWS=9093 PORT_ANALYTICS=9084 PORT_DEVOPS=9092 PORT_K8S=9093
 # ============================================================================
 
 RUN_DIR     := $(abspath .run)
@@ -25,6 +26,7 @@ ANAL_APP    := analytics-with-duckdb
 DEBT_APP    := america-debt-crisis-world
 EU_APP      := eu-independence
 DEVOPS_APP  := devops-zero-hero
+K8S_APP     := k8s
 COMPOSE          := $(DBLAWS_APP)/docker-compose.yml
 COMPOSE_ANALYTICS := $(ANAL_APP)/docker-compose.yml
 COMPOSE_DEBT := $(DEBT_APP)/docker-compose.yml
@@ -40,6 +42,7 @@ PORT_DBLAWS    ?= 8083
 PORT_ANALYTICS ?= 8084
 PORT_EU        ?= 8091
 PORT_DEVOPS    ?= 8092
+PORT_K8S       ?= 8093
 
 # Spring Boot 4.1.1 is supported up to Java 26. sdkman may point JAVA_HOME at
 # the 27-ea "current" JDK, which breaks the build, so prefer JDK 24 when the
@@ -53,6 +56,7 @@ export JAVA_HOME
         start-rules stop-rules start-dblaws stop-dblaws \
         start-analytics stop-analytics start-euind stop-euind \
         start-devops stop-devops docker-build-devops docker-run-devops \
+        start-k8s stop-k8s \
         start-debt-db stop-debt-db
 
 # ----------------------------------------------------------------------------
@@ -146,6 +150,7 @@ status:
 	@echo "analytics        : $$(lsof -tiTCP:$(PORT_ANALYTICS) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_ANALYTICS)' || echo 'down')"
 	@echo "eu-independence  : $$(lsof -tiTCP:$(PORT_EU) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_EU)' || echo 'down')"
 	@echo "devops-zero-hero : $$(lsof -tiTCP:$(PORT_DEVOPS) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_DEVOPS)' || echo 'down')"
+	@echo "k8s-simulator    : $$(lsof -tiTCP:$(PORT_K8S) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_K8S)' || echo 'down')"
 	@echo "docker images    : $$(docker images --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | grep -c 'devops-zero-hero\|api-rules' ) devops/api-rules image(s) built"
 
 logs:
@@ -164,6 +169,8 @@ test:
 	+mvn -B -f $(EU_APP)/app/pom.xml test
 	@echo "==> Testing devops-zero-hero (DevOps course app, no Docker needed)"
 	+mvn -B -f $(DEVOPS_APP)/app/pom.xml test
+	@echo "==> Testing k8s simulator (kubectl lab, no Docker needed)"
+	+mvn -B -f $(K8S_APP)/app/pom.xml test
 	@echo "==> Testing america-debt-crisis-world (seed + model + notebook smoke tests, no Docker needed)"
 	+if [ -x $(DEBT_APP)/.venv/bin/pytest ]; then \
 	  cd $(DEBT_APP) && .venv/bin/pytest -q; \
@@ -214,6 +221,12 @@ start-devops:
 
 stop-devops:
 	@$(call stop_spring_app,$(DEVOPS_APP),$(PORT_DEVOPS))
+
+start-k8s:
+	@$(call start_spring_app,$(K8S_APP),$(PORT_K8S))
+
+stop-k8s:
+	@$(call stop_spring_app,$(K8S_APP),$(PORT_K8S))
 
 # The Docker targets build and run the course itself as a container, so the
 # "what ships" lesson is demonstrable end-to-end on one machine.
@@ -316,10 +329,11 @@ help:
 	@echo "  make start-analytics analytics only (+duckdb) |  make stop-analytics"
 	@echo "  make start-euind    eu-independence only  |  make stop-euind"
 	@echo "  make start-devops   devops-zero-hero only |  make stop-devops"
+	@echo "  make start-k8s      kubectl simulator only |  make stop-k8s"
 	@echo "  make docker-run-devops build + run devops-zero-hero as a container"
 	@echo "  make start-apps     apps only             |  make stop-apps"
 	@echo "  make clean          remove logs + pid files"
 	@echo ""
 	@echo "  Ports (override with e.g. 'make start PORT_RULES=9090'):"
 	@echo "    api-rules :$(PORT_RULES)   db-laws :$(PORT_DBLAWS)   analytics :$(PORT_ANALYTICS)   postgres :5432"
-	@echo "    eu-independence :$(PORT_EU)   devops-zero-hero :$(PORT_DEVOPS)   (standalone)"
+	@echo "    eu-independence :$(PORT_EU)   devops-zero-hero :$(PORT_DEVOPS)   k8s-simulator :$(PORT_K8S)   (standalone)"

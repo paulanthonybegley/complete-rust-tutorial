@@ -34,7 +34,7 @@
 		<form hx-post="/kubectl" hx-target="#console-out">
 			<div class="ctl">
 				<label class="tight" for="cmd">$</label>
-				<input type="text" id="cmd" name="cmd" size="46" value="kubectl get pods -A"
+				<input type="text" id="cmd" name="cmd" size="46" value="get pods -A"
 					style="font-family:var(--mono)" />
 				<button class="btn" type="submit">run</button>
 			</div>
@@ -81,15 +81,14 @@
 			<div class="card">
 				<div class="card-head">2 — kill it</div>
 				<form hx-post="/kubectl" hx-target="#console-out" style="display:contents">
-					<input type="hidden" name="cmd" value="kubectl delete pod flaky" />
-					<button class="btn danger" type="submit">kubectl delete pod flaky</button>
-				</form>
+					<input type="hidden" name="cmd" value="delete pod flaky" />
+					<button class="btn danger" type="submit">kubectl delete pod flaky</button>					</form>
 				<p class="muted small">A bare pod <strong>stays deleted</strong>. No controller, no reconciliation.</p>
 			</div>
 			<div class="card">
 				<div class="card-head">3 — prove it</div>
 				<form hx-post="/kubectl" hx-target="#console-out" style="display:contents">
-					<input type="hidden" name="cmd" value="kubectl get pods -o wide" />
+					<input type="hidden" name="cmd" value="get pods -o wide" />
 					<button class="btn ghost" type="submit">kubectl get pods -o wide</button>
 				</form>
 				<p class="muted small">Now run <span class="mono">kubectl delete pod web-rs-77b7c6d8f9-x1</span> — the same
