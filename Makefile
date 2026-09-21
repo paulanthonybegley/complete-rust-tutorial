@@ -9,12 +9,13 @@
 #    analytics-with-duckdb/app Spring Boot 4 analytics API          :8084
 #    america-debt-crisis-world  Jupyter notebook course (DuckDB file + CLI)  (docker; tests are venv-only)
 #    eu-independence (standalone)  Spring Boot 4 + Thymeleaf + htmx course :8091
+#    devops-zero-hero (standalone) Spring Boot 4 + Thymeleaf + htmx course :8092
 #
 #  Idempotency: `make start` on an already-running suite is a no-op that
 #  reports what is already up; `make stop` on an already-stopped suite
 #  succeeds silently. Ports are overridable:
 #
-#    make start PORT_RULES=9090 PORT_DBLAWS=9093 PORT_ANALYTICS=9084
+#    make start PORT_RULES=9090 PORT_DBLAWS=9093 PORT_ANALYTICS=9084 PORT_DEVOPS=9092
 # ============================================================================
 
 RUN_DIR     := $(abspath .run)
@@ -23,6 +24,7 @@ DBLAWS_APP  := seven-database-laws
 ANAL_APP    := analytics-with-duckdb
 DEBT_APP    := america-debt-crisis-world
 EU_APP      := eu-independence
+DEVOPS_APP  := devops-zero-hero
 COMPOSE          := $(DBLAWS_APP)/docker-compose.yml
 COMPOSE_ANALYTICS := $(ANAL_APP)/docker-compose.yml
 COMPOSE_DEBT := $(DEBT_APP)/docker-compose.yml
@@ -37,6 +39,7 @@ PORT_RULES     ?= 8080
 PORT_DBLAWS    ?= 8083
 PORT_ANALYTICS ?= 8084
 PORT_EU        ?= 8091
+PORT_DEVOPS    ?= 8092
 
 # Spring Boot 4.1.1 is supported up to Java 26. sdkman may point JAVA_HOME at
 # the 27-ea "current" JDK, which breaks the build, so prefer JDK 24 when the
@@ -49,6 +52,7 @@ export JAVA_HOME
         start-apps stop-apps start-db stop-db start-duckdb stop-duckdb \
         start-rules stop-rules start-dblaws stop-dblaws \
         start-analytics stop-analytics start-euind stop-euind \
+        start-devops stop-devops docker-build-devops docker-run-devops \
         start-debt-db stop-debt-db
 
 # ----------------------------------------------------------------------------
@@ -141,6 +145,8 @@ status:
 	@echo "duckdb-debt CLI  : $$(docker ps --filter name=duckdb-debt --format '{{.Status}}' 2>/dev/null | grep -q . && echo 'Up (container)' || echo 'down')"
 	@echo "analytics        : $$(lsof -tiTCP:$(PORT_ANALYTICS) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_ANALYTICS)' || echo 'down')"
 	@echo "eu-independence  : $$(lsof -tiTCP:$(PORT_EU) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_EU)' || echo 'down')"
+	@echo "devops-zero-hero : $$(lsof -tiTCP:$(PORT_DEVOPS) -sTCP:LISTEN >/dev/null 2>&1 && echo 'UP  :$(PORT_DEVOPS)' || echo 'down')"
+	@echo "docker images    : $$(docker images --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | grep -c 'devops-zero-hero\|api-rules' ) devops/api-rules image(s) built"
 
 logs:
 	@echo "==> tailing $(RUN_DIR)/*.log (Ctrl-C to detach)"
@@ -156,6 +162,8 @@ test:
 	+mvn -B -f $(ANAL_APP)/app/pom.xml test
 	@echo "==> Testing eu-independence (Thymeleaf + htmx course, no Docker needed)"
 	+mvn -B -f $(EU_APP)/app/pom.xml test
+	@echo "==> Testing devops-zero-hero (DevOps course app, no Docker needed)"
+	+mvn -B -f $(DEVOPS_APP)/app/pom.xml test
 	@echo "==> Testing america-debt-crisis-world (seed + model + notebook smoke tests, no Docker needed)"
 	+if [ -x $(DEBT_APP)/.venv/bin/pytest ]; then \
 	  cd $(DEBT_APP) && .venv/bin/pytest -q; \
@@ -200,6 +208,31 @@ start-euind:
 
 stop-euind:
 	@$(call stop_spring_app,$(EU_APP),$(PORT_EU))
+
+start-devops:
+	@$(call start_spring_app,$(DEVOPS_APP),$(PORT_DEVOPS))
+
+stop-devops:
+	@$(call stop_spring_app,$(DEVOPS_APP),$(PORT_DEVOPS))
+
+# The Docker targets build and run the course itself as a container, so the
+# "what ships" lesson is demonstrable end-to-end on one machine.
+docker-build-devops:
+	@docker info >/dev/null 2>&1 \
+	  || { echo "ERROR: Docker daemon is not running — start Docker Desktop first."; exit 1; }; \
+	echo "==> building devops-zero-hero image"; \
+	docker build -t devops-zero-hero:0.0.1 $(DEVOPS_APP)
+
+docker-run-devops: docker-build-devops
+	@docker info >/dev/null 2>&1 \
+	  || { echo "ERROR: Docker daemon is not running — start Docker Desktop first."; exit 1; }; \
+	if [ -n "$$(docker ps -aq --filter name=devops-lab 2>/dev/null)" ]; then \
+	  echo "==> removing previous devops-lab container"; \
+	  docker rm -f devops-lab >/dev/null 2>&1; \
+	fi; \
+	echo "==> running devops-zero-hero on http://localhost:$(PORT_DEVOPS)"; \
+	docker run -d --name devops-lab -p $(PORT_DEVOPS):8080 devops-zero-hero:0.0.1; \
+	$(call wait_port,$(PORT_DEVOPS),devops-lab)
 
 start-db:
 	@docker info >/dev/null 2>&1 \
@@ -282,9 +315,11 @@ help:
 	@echo "  make start-dblaws   db-laws only (+ db)   |  make stop-dblaws"
 	@echo "  make start-analytics analytics only (+duckdb) |  make stop-analytics"
 	@echo "  make start-euind    eu-independence only  |  make stop-euind"
+	@echo "  make start-devops   devops-zero-hero only |  make stop-devops"
+	@echo "  make docker-run-devops build + run devops-zero-hero as a container"
 	@echo "  make start-apps     apps only             |  make stop-apps"
 	@echo "  make clean          remove logs + pid files"
 	@echo ""
 	@echo "  Ports (override with e.g. 'make start PORT_RULES=9090'):"
 	@echo "    api-rules :$(PORT_RULES)   db-laws :$(PORT_DBLAWS)   analytics :$(PORT_ANALYTICS)   postgres :5432"
-	@echo "    eu-independence :$(PORT_EU)   (standalone)"
+	@echo "    eu-independence :$(PORT_EU)   devops-zero-hero :$(PORT_DEVOPS)   (standalone)"

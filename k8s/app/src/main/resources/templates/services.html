@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Services · ClusterIP · NodePort · LoadBalancer · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 2:08:12 Basics</span>
+			<span class="chip">2:26:29 port vs targetPort</span>
+			<span class="chip">2:29:19 ClusterIP</span>
+			<span class="chip">2:36:48 NodePort</span>
+			<span class="chip">2:39:15 LoadBalancer</span>
+		</div>
+		<h1>Services: the <span class="accent">stable front door</span></h1>
+		<p class="lead">
+			Pods come and go with new IPs; a Service hands you an IP + DNS name that never changes. Three knobs on
+			one idea: <strong>ClusterIP</strong> (internal), <strong>NodePort</strong> (outside via node IP),
+			<strong>LoadBalancer</strong> (a cloud LB in front of the nodes).
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">The services in this cluster</span>
+		</div>
+		<table class="mini">
+			<tr><th>service</th><th>type</th><th>clusterIP</th><th>port→targetPort</th><th>nodePort</th><th>selector</th></tr>
+			<tr th:each="svc : ${services}">
+				<td class="mono" th:text="${svc.namespace + '/' + svc.name}">svc</td>
+				<td th:text="${svc.type}">type</td>
+				<td class="mono" th:text="${svc.clusterIp}">ip</td>
+				<td th:text="${svc.port + ' → ' + svc.targetPort}">p</td>
+				<td class="mono" th:text="${svc.nodePort > 0 ? svc.nodePort : '—'}">np</td>
+				<td class="mono" th:text="${svc.selector}">sel</td>
+			</tr>
+		</table>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">Switch the type and watch the front door change</span>
+			<span class="step-hint">the chain + a simulated curl update instantly</span>
+		</div>
+
+		<form hx-post="/services" hx-target="#svc-detail">
+			<div class="ctl">
+				<input type="radio" name="type" value="ClusterIP" id="t-cip" th:checked="${type == 'ClusterIP'}" />
+				<label class="tight" for="t-cip">ClusterIP</label>
+				<input type="radio" name="type" value="NodePort" id="t-np" th:checked="${type == 'NodePort'}" />
+				<label class="tight" for="t-np">NodePort</label>
+				<input type="radio" name="type" value="LoadBalancer" id="t-lb" th:checked="${type == 'LoadBalancer'}" />
+				<label class="tight" for="t-lb">LoadBalancer</label>
+				<button class="btn" type="submit">switch type</button>
+			</div>
+		</form>
+
+		<div id="svc-detail">
+			<div class="result-box ok">
+				<span class="meta-kicker" th:text="${type} + ' — the chain'"></span>
+				<pre class="term out" th:text="${diagram}">port chain</pre>
+				<p class="mono" th:text="${'$ ' + curl}">curl</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">3</span>
+			<span class="step-name">Run the curl against the live service</span>
+		</div>
+		<form hx-post="/services" hx-target="#curl-out">
+			<div class="ctl">
+				<label class="tight">$ kubectl exec web-rs-77b7c6d8f9-x1 --</label>
+				<input type="hidden" name="type" th:value="${type}" />
+				<button class="btn ghost" type="submit">curl -s <span th:text="${fqdn}">svc</span></button>
+			</div>
+		</form>
+		<div id="curl-out" th:include="~{fragments :: curlOut}"></div>
+	</section>
+
+	<section>
+		<h2 class="section-title">One page, three types</h2>
+		<table class="mini">
+			<tr><th></th><th>ClusterIP</th><th>NodePort</th><th>LoadBalancer</th></tr>
+			<tr><td class="fw">reachable from</td><td>inside the cluster</td><td>inside + node IP:nodePort</td><td>inside + outside via LB IP</td></tr>
+			<tr><td class="fw">stable identity</td><td colspan="3">virtual IP + DNS (<span class="mono">svc.ns.svc.cluster.local</span>)</td></tr>
+			<tr><td class="fw">extra bits</td><td>—</td><td>nodePort in 30000–32767</td><td>external LB + optional ingress</td></tr>
+			<tr><td class="fw">fronts</td><td colspan="3">the pods matched by <span class="mono">spec.selector</span> → <span class="mono">spec.ports[].targetPort</span></td></tr>
+		</table>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/netpol}">Next: who is even allowed to talk — NetworkPolicies →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

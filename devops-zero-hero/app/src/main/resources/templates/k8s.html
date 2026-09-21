@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Lab · Orchestration — step 3 of the Container arc</p>
+			<h1>Kill a pod. It respawns.</h1>
+			<p class="lead">
+				A Deployment declares the desired state; the controller reconciles reality towards it. Scale up, kill a
+				pod, or roll a new generation — the cluster does the boring work. This is panel 3 of the
+				<a href="/docker">integrated Container lab</a>; panel 1 is the pipeline that built the image this
+				cluster is running.
+			</p>
+
+			<form class="ctl" hx-get="/k8s/reconcile" hx-target="#cluster" hx-swap="innerHTML">
+				<label>Desired replicas (1–5)
+					<input type="number" name="replicas" min="1" max="5" th:value="${replicas}" />
+				</label>
+				<label>Kill a pod
+					<select name="killPod">
+						<option value="">none</option>
+						<option value="1">pod 1</option>
+						<option value="2">pod 2</option>
+						<option value="3">pod 3</option>
+						<option value="4">pod 4</option>
+						<option value="5">pod 5</option>
+					</select>
+				</label>
+				<label class="check"><input type="checkbox" name="rolling" value="true" /> rolling update</label>
+				<input type="hidden" name="rolling" value="false" />
+				<button class="btn" type="submit">Reconcile</button>
+			</form>
+		</section>
+
+		<section id="cluster" th:insert="~{_fragments :: k8sCluster}"></section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

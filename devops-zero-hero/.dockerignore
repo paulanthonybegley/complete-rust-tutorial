@@ -1,0 +1,8 @@
+target/
+.run/
+Dockerfile
+
+# devops course workspace clutter
+OLD.txt
+docs/
+deploy/

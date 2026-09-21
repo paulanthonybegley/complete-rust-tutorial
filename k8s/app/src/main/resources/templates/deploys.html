@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Deployments &amp; Self-Healing · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 1:28:11 Labels</span>
+			<span class="chip">1:36:01 Deployments</span>
+		</div>
+		<h1>Labels, <span class="accent">Deployments</span> &amp; self-healing</h1>
+		<p class="lead">
+			A Deployment is a package deal: ReplicaSet (the how-many) + a rollout strategy (the how-now). Its engine
+			is the selector — a label query that owns whichever pods answer it. Every action here mutates this
+			simulator's live <span class="mono">web</span> Deployment, and you can watch it converge.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">Drive the Deployment — scale, update, undo, kill</span>
+			<span class="step-hint">watch the counts in the pod board below adjust</span>
+		</div>
+
+		<form method="post" th:action="@{/deploys}">
+			<div class="ctl">
+				<label class="tight" for="n"></label>
+				<select name="image">
+					<option th:each="img : ${images}" th:value="${img}" th:text="${img}">nginx:1.25</option>
+				</select>
+				<button class="btn" type="submit" name="action" value="update">kubectl set image</button>
+				<button class="btn" type="submit" name="action" value="scale-up">scale +1</button>
+				<button class="btn" type="submit" name="action" value="scale-down">scale −1</button>
+				<button class="btn ghost" type="submit" name="action" value="undo">rollout undo</button>
+				<button class="btn danger" type="submit" name="action" value="kill">kill a pod</button>
+			</div>
+		</form>
+
+		<div id="result" class="grid3">
+			<div class="card">
+				<div class="card-head">Deployment <span class="mono" th:text="${deployment.name}">web</span></div>
+				<div class="stat-grid">
+					<div class="stat-row"><span class="meta-kicker">image</span><span class="mono" th:text="${deployment.image}">nginx</span></div>
+					<div class="stat-row"><span class="meta-kicker">desired</span><strong th:text="${deployment.replicas}">3</strong></div>
+					<div class="stat-row"><span class="meta-kicker">ready</span>
+						<strong th:class="${deployment.ready == deployment.replicas ? 'ok-line' : 'bad-line'}"
+							th:text="${deployment.ready + '/' + deployment.replicas}">3/3</strong></div>
+					<div class="stat-row"><span class="meta-kicker">strategy</span><span class="mono">RollingUpdate</span></div>
+				</div>
+			</div>
+			<div class="card">
+				<div class="card-head">ReplicaSets in play</div>
+				<table class="mini">
+					<tr><th>replicaset</th><th>img</th><th>desired/ready</th></tr>
+					<tr th:each="rs : ${rsets}">
+						<td class="mono" th:text="${rs.name}">rs</td>
+						<td class="mono" th:text="${rs.image}">img</td>
+						<td th:text="${rs.wanted + '/' + rs.ready}">0/0</td>
+					</tr>
+					<tr th:if="${#lists.isEmpty(rsets)}"><td colspan="3" class="muted">no replica sets to show</td></tr>
+				</table>
+			</div>
+			<div class="card">
+				<div class="card-head">rollout history</div>
+				<pre class="term out" th:text="${rolloutHistory}">revisions</pre>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">The selector lab — labels are how everything finds things</span>
+			<span class="step-hint">type a selector; answer gives the pods it matches</span>
+		</div>
+
+		<form method="get" th:action="@{/deploys}">
+			<div class="ctl">
+				<label class="tight" for="sel">$ kubectl get pods -l</label>
+				<input type="text" id="sel" name="selector" size="30" value="app=web" style="font-family:monospace" />
+				<button class="btn ghost" type="submit">match</button>
+			</div>
+		</form>
+
+		<div class="result-box ok" th:if="${!#lists.isEmpty(selectResult)}">
+			<span class="meta-kicker" th:text="${#lists.size(selectResult)} + ' pod(s) match -l ' + selector"></span>
+			<div class="ns-body">
+				<div class="pod" th:each="p : ${selectResult}">
+					<span th:text="${p.namespace + '/' + p.name}">pod</span>
+					<span class="muted" th:text="${p.labels}">labels</span>
+				</div>
+			</div>
+		</div>
+		<div class="result-box bad" th:if="${#lists.isEmpty(selectResult)} and !${#strings.isEmpty(selector)}">
+			<span class="meta-kicker">no pods match</span>
+			<p class="muted">Labels are free-form — <code>app=web</code>, <code>tier=frontend</code>,
+				<code>version=v2</code> — but only pods <em>labelled</em> with them will ever answer.</p>
+		</div>
+
+		<div class="card" th:if="${#strings.isEmpty(selector)}">
+			<div class="card-head">pod board — every pod in the simulator</div>
+			<div class="ns-body">
+				<div class="pod" th:each="p : ${pods}">
+					<span th:text="${p.namespace + '/' + p.name}">pod</span>
+					<span class="muted" th:text="${p.phase}">phase</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/storage}">Next: PersistentVolumes — data that survives the pod →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

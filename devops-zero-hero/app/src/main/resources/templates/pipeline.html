@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Lab · CI/CD — step 1 of the Container arc</p>
+			<h1>The pipeline is an assembly line.</h1>
+			<p class="lead">
+				Every job must pass before the next runs. Sabotage a stage and watch the whole run stop at the first
+				red job — that tripwire is what keeps bad code out of production. This is panel 1 of the
+				<a href="/docker">integrated Container lab</a>: the other two panels are the Docker build and the
+				cluster that runs the image.
+			</p>
+
+			<form class="ctl" hx-get="/pipeline/run" hx-target="#run-result" hx-swap="innerHTML">
+				<label>Make the pipeline fail at
+					<select name="failAt">
+						<option value="none" th:selected="${failAt == 'none'}">nothing — green run</option>
+						<option value="checkout" th:selected="${failAt == 'checkout'}">Checkout</option>
+						<option value="compile" th:selected="${failAt == 'compile'}">Compile &amp; package</option>
+						<option value="tests" th:selected="${failAt == 'tests'}">Unit &amp; integration tests</option>
+						<option value="scan" th:selected="${failAt == 'scan'}">Security scan</option>
+						<option value="image" th:selected="${failAt == 'image'}">Build image</option>
+						<option value="push" th:selected="${failAt == 'push'}">Push to registry</option>
+						<option value="deploy" th:selected="${failAt == 'deploy'}">Deploy to cluster</option>
+						<option value="verify" th:selected="${failAt == 'verify'}">Verify &amp; smoke</option>
+					</select>
+				</label>
+				<button class="btn" type="submit">Run pipeline</button>
+			</form>
+		</section>
+
+		<section id="run-result" th:insert="~{_fragments :: pipelineRun}"></section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

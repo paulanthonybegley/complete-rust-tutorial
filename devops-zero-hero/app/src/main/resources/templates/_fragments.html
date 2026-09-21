@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head></head>
+
+<body>
+
+	<!-- Shared htmx fragments. This template is never rendered as a page;
+	     every controller returns a fragment by name, and page templates insert
+	     one. Keeping them here stops Thymeleaf double-rendering fragment bodies
+	     on a normal page render. -->
+
+	<!-- =================================================== concepts -->
+	<th:block th:fragment="conceptsGrid">
+		<div class="grid cards">
+			<article class="card" th:each="p : ${items}">
+				<div class="card-top">
+					<span class="badge" th:text="${p.category.label}">Category</span>
+					<span class="status" th:classappend="'st-' + ${#strings.toLowerCase(p.status.name())}"
+						th:text="${p.status.label}">Status</span>
+				</div>
+				<h3 th:text="${p.title}">Title</h3>
+				<p class="subtitle" th:text="${p.subtitle}">Subtitle</p>
+				<p class="summary" th:text="${p.summary}">Summary</p>
+				<button class="btn open" th:attr="hx-get=${'/concepts/detail?id=' + p.id}"
+					hx-target="#concept-detail" hx-swap="outerHTML">
+					Open →
+				</button>
+			</article>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="conceptDetail">
+		<div id="concept-detail" class="drawer open term" th:if="${concept != null}">
+			<div class="detail-inner">
+				<div class="detail-head">
+					<span class="badge" th:text="${concept.category.label}">Category</span>
+					<span class="status" th:classappend="'st-' + ${#strings.toLowerCase(concept.status.name())}"
+						th:text="${concept.status.label}">Status</span>
+					<button class="chip close" type="button"
+						onclick="var d=document.getElementById('concept-detail');d.classList.remove('open');d.innerHTML='';">✕
+						close</button>
+				</div>
+				<h3 th:text="${concept.title}">Title</h3>
+				<p class="lead" th:text="${concept.summary}">Summary</p>
+
+				<h4>In the video</h4>
+				<ul class="bullets">
+					<li th:each="d : ${concept.inVideo()}" th:text="${d}">detail</li>
+				</ul>
+
+				<h4>Commands & artefacts</h4>
+				<div class="figures">
+					<div class="figure" th:each="f : ${concept.figures()}">
+						<span class="fv term" th:text="${f.value()}">value</span>
+						<span class="fl" th:text="${f.label()}">label</span>
+						<span class="fn" th:text="${f.note()}">note</span>
+					</div>
+				</div>
+			</div>
+			<script>
+				document.getElementById('concept-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+			</script>
+		</div>
+
+		<div id="concept-detail" class="drawer open" th:if="${missing != null}">
+			<div class="notice">
+				No concept card with id <code th:text="${missing}">⧉</code> — check the id in the data catalogue.
+			</div>
+		</div>
+	</th:block>
+
+	<!-- =================================================== pipeline -->
+	<th:block th:fragment="pipelineRun">
+		<ol class="stages">
+			<li class="stage" th:each="s,row : ${run.stages()}">
+				<span class="stage-no" th:text="${row.count}">1</span>
+				<div class="stage-body" th:classappend="${s.passed()} ? ' ok' : (${s.skipped()} ? ' sk' : ' bad')">
+					<span class="stage-name" th:text="${s.name()}">Checkout</span>
+					<span class="stage-state">
+						<span th:if="${s.passed()}">✓ passed</span>
+						<span th:if="${s.skipped()}">— skipped</span>
+						<span th:unless="${s.passed() or s.skipped()}">✗ failed</span>
+					</span>
+					<p class="stage-note" th:text="${s.note()}">note</p>
+				</div>
+			</li>
+		</ol>
+		<div class="result" th:classappend="${run.succeeded()} ? ' good' : ' bad'">
+			<div class="big-stat">
+				<span class="bv" th:text="${run.succeeded()} ? 'GREEN' : 'RED'">GREEN</span>
+				<span class="bl">pipeline verdict</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${run.passed()} + ' / ' + ${run.stages().size()}">8/8</span>
+				<span class="bl">jobs passed</span>
+			</div>
+			<div class="big-stat" th:if="${!run.succeeded()}">
+				<span class="bv" th:text="${'stage ' + (run.passed() + 1)}">stage ?</span>
+				<span class="bl">first red job</span>
+			</div>
+			<p class="verdict" th:text="${run.verdict()}">verdict</p>
+		</div>
+	</th:block>
+
+	<!-- ===================================================== docker -->
+	<th:block th:fragment="dockerLayers">
+		<div class="layer-stack">
+			<div class="layer" th:each="l : ${result.layers()}" th:classappend="${l.cached()} ? ' cached' : ' rebuilt'">
+				<span class="layer-name" th:text="${l.name()}">Layer</span>
+				<span class="layer-state">
+					<span th:if="${l.cached()}">CACHED · 0s</span>
+					<span th:unless="${l.cached()}">REBUILT · <span th:text="${l.seconds()} + 's'">14s</span></span>
+				</span>
+			</div>
+		</div>
+		<div class="result" th:classappend="${result.totalSeconds() > 40} ? ' bad' : ' good'">
+			<div class="big-stat">
+				<span class="bv" th:text="${result.totalSeconds()} + 's'">14s</span>
+				<span class="bl">wall-clock build time</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${result.layers().size()}">5</span>
+				<span class="bl">layers</span>
+			</div>
+			<p class="verdict" th:text="${result.verdict()}">verdict</p>
+		</div>
+	</th:block>
+
+	<!-- ======================================================== k8s -->
+	<th:block th:fragment="k8sCluster">
+		<div class="pods">
+			<div class="pod" th:each="p : ${result.pods()}"
+				th:classappend="'p-' + ${#strings.toLowerCase(p.phase())}">
+				<span class="pod-name" th:text="${p.name()}">api-rules</span>
+				<span class="pod-phase" th:text="${p.phase()}">Running</span>
+			</div>
+		</div>
+		<div class="result" th:classappend="${result.ready() < result.desired()} ? ' warn' : ' good'">
+			<div class="big-stat">
+				<span class="bv" th:text="${result.ready()} + ' / ' + ${result.desired()}">3/3</span>
+				<span class="bl">ready replicas</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${result.respawned()}">0</span>
+				<span class="bl">self-healed pods (this JVM)</span>
+			</div>
+			<p class="verdict" th:text="${result.verdict()}">verdict</p>
+		</div>
+	</th:block>
+
+	<!-- ======================================================== iac -->
+	<th:block th:fragment="terraformPlan">
+		<table class="tf">
+			<thead>
+				<tr>
+					<th>Resource</th>
+					<th>Action</th>
+					<th>Reason</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="ch : ${result.changes()}">
+					<td class="tf-addr" th:text="${ch.address()}">aws_vpc</td>
+					<td th:classappend="'tf-' + ${ch.action()}" th:text="${ch.action()}">add</td>
+					<td th:text="${ch.reason()}">reason</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(result.changes())}">
+					<td class="muted">—</td>
+					<td class="muted">no-op</td>
+					<td class="muted" th:text="'nothing to do: ' + ${result.unchanged()} + ' modules already match'">—</td>
+				</tr>
+			</tbody>
+		</table>
+		<div class="result">
+			<div class="big-stat">
+				<span class="bv" th:text="${result.mode()}">plan</span>
+				<span class="bl">command</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${result.add() + result.update() + result.replace() + result.destroy()}">0</span>
+				<span class="bl">resources to touch</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${result.unchanged()}">7</span>
+				<span class="bl">already in sync</span>
+			</div>
+			<p class="verdict" th:text="${result.verdict()}">verdict</p>
+		</div>
+	</th:block>
+
+	<!-- ==================================================== monitor -->
+	<th:block th:fragment="monitorPanel">
+		<div class="gauges">
+			<div class="big-stat">
+				<span class="bv" th:classappend="${result.paged()} ? ' bad' : ' good'" th:text="${#numbers.formatDecimal(result.uptimePct(), 1, 2)} + '%'">99.95%</span>
+				<span class="bl">uptime (30d)</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:classappend="${result.latencyMs() > 500} ? ' bad' : ' good'" th:text="${result.latencyMs()} + 'ms'">142ms</span>
+				<span class="bl">P95 latency</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:classappend="${result.errorsPct() > 1.0} ? ' bad' : ' good'" th:text="${#numbers.formatDecimal(result.errorsPct(), 1, 1)} + '%'">0.1%</span>
+				<span class="bl">error rate</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:classappend="${result.paged()} ? ' bad' : ' good'" th:text="${result.paged()} ? 'PAGED' : 'quiet'">quiet</span>
+				<span class="bl">3 a.m. phone</span>
+			</div>
+		</div>
+		<div class="alertlog">
+			<span class="chip" th:classappend="${result.paged()} ? ' on' : ''">last alert</span>
+			<code th:text="${result.lastAlert()}">no alert</code>
+		</div>
+		<p class="verdict" th:text="${result.verdict()}">verdict</p>
+	</th:block>
+
+	<!-- ==================================================== security -->
+	<th:block th:fragment="securityVerdict">
+		<div class="riskbar">
+			<div class="risk-fill" th:classappend="${result.allowed()} ? '' : ' hot'"
+				th:style="'width:' + ${result.score()} + '%'" th:attr="data-score=${result.score()}"></div>
+		</div>
+		<div class="result" th:classappend="${result.allowed()} ? ' good' : ' bad'">
+			<div class="big-stat">
+				<span class="bv" th:text="${result.allowed()} ? 'ALLOWED' : 'BLOCKED'">ALLOWED</span>
+				<span class="bl">edge guard verdict</span>
+			</div>
+			<div class="big-stat">
+				<span class="bv" th:text="${result.score()} + '/100'">10/100</span>
+				<span class="bl">risk score</span>
+			</div>
+			<div class="checks">
+				<div class="check" th:each="c : ${result.checks()}"
+					th:classappend="${c.flagged()} ? ' flag' : ' ok'">
+					<span class="check-name" th:text="${c.name()}">Check</span>
+					<span class="check-value">
+						<span th:if="${c.flagged()}">⚠ flagged — <span th:text="${c.detail()}">detail</span></span>
+						<span th:unless="${c.flagged()}" th:text="${c.detail()}">clean</span>
+					</span>
+				</div>
+			</div>
+			<p class="verdict" th:text="${result.verdict()}">verdict</p>
+		</div>
+	</th:block>
+
+	<!-- ======================================================== git -->
+	<th:block th:fragment="gitGraph">
+		<ol class="gitlog">
+			<li class="commit" th:each="c : ${commits}" th:style="'margin-left:' + (${c.column()} * 22) + 'px'">
+				<span class="commit-mark" th:text="${c.mark()}">•</span>
+				<code class="commit-sha" th:text="${c.sha()}">abc1234</code>
+				<span class="commit-msg" th:text="${c.message()}">message</span>
+				<span class="muted small" th:text="${c.author()} + ' · ' + ${c.when()}">you · now</span>
+			</li>
+		</ol>
+		<p class="muted small" th:text="${#lists.isEmpty(commits)} ? 'Nothing on this branch yet.' : ''"></p>
+	</th:block>
+
+	<!-- ======================================================== quiz -->
+	<th:block th:fragment="quizGrid">
+		<div class="quiz-grid">
+			<div class="qcard" th:each="q : ${questions}" th:id="${'q-' + q.id()}">
+				<div class="card-top">
+					<span class="badge" th:text="${q.category().label}">Theme</span>
+					<span class="status st-explained"><span th:text="${#strings.toUpperCase(q.id())}">Q1</span></span>
+				</div>
+				<h3 th:text="${q.prompt()}">Prompt</h3>
+				<form hx-post="/quiz/answer" th:attr="hx-target=${'#q-' + q.id()}" hx-swap="outerHTML">
+					<input type="hidden" name="q" th:value="${q.id()}" />
+					<label class="option" th:each="opt : ${q.options()}">
+						<input type="radio" name="choice" th:value="${opt}" required />
+						<span th:text="${opt}">Option</span>
+					</label>
+					<button class="btn" type="submit">Check answer</button>
+				</form>
+			</div>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="quizQuestion">
+		<th:block th:if="${q != null}">
+			<div class="qcard" th:id="${'q-' + q.id()}">
+				<div class="card-top">
+					<span class="badge" th:text="${q.category().label}">Theme</span>
+					<span class="status st-explained"><span th:text="${#strings.toUpperCase(q.id())}">Q1</span></span>
+				</div>
+				<h3 th:text="${q.prompt()}">Prompt</h3>
+				<form hx-post="/quiz/answer" th:attr="hx-target=${'#q-' + q.id()}" hx-swap="outerHTML">
+					<input type="hidden" name="q" th:value="${q.id()}" />
+					<label class="option" th:each="opt : ${q.options()}">
+						<input type="radio" name="choice" th:value="${opt}" required />
+						<span th:text="${opt}">Option</span>
+					</label>
+					<button class="btn" type="submit">Check answer</button>
+				</form>
+			</div>
+		</th:block>
+	</th:block>
+
+	<th:block th:fragment="quizAnswered">
+		<th:block th:if="${result != null}" th:with="q=${result['question']}, correct=${result['correct']}">
+			<div class="qcard" th:id="${'q-' + q.id()}" th:classappend="${correct} ? ' ok' : ' bad'">
+				<div class="card-top">
+					<span class="badge" th:text="${q.category().label}">Theme</span>
+					<span class="status" th:classappend="${correct} ? ' st-shipped' : ' st-explained'"
+						th:text="${correct} ? 'Correct' : 'Not quite'">Result</span>
+				</div>
+				<h3 th:text="${q.prompt()}">Prompt</h3>
+				<p class="verdict">
+					<span th:unless="${correct}"
+						th:text="'You picked: ' + ${result['chosen']} + '. Expected: ' + ${result['expected']} + '.'"></span>
+					<span th:text="${q.explanation()}">Explanation</span>
+				</p>
+				<button class="btn" th:attr="hx-get=${'/quiz/question?q=' + q.id()}" hx-target="this" hx-swap="outerHTML">
+					Try another answer
+				</button>
+			</div>
+		</th:block>
+	</th:block>
+
+	<!-- ================================================== flashcards -->
+	<th:block th:fragment="flashcardCard">
+		<div class="flip">
+			<input type="checkbox" class="flip-toggle" id="flip-card" />
+			<div class="flipper">
+				<label class="face front" for="flip-card">
+					<span class="badge" th:text="${card.category().label}">Theme</span>
+					<h3 th:text="${card.front()}">Term</h3>
+					<p class="muted">click to flip ↓</p>
+				</label>
+				<label class="face back" for="flip-card">
+					<p th:text="${card.back()}">Definition</p>
+				</label>
+			</div>
+		</div>
+	</th:block>
+
+	<th:block th:fragment="flashcardGrid">
+		<div class="flip-grid deck">
+			<div class="flip" th:each="c,row : ${deck}" th:with="ck='c' + ${row.index}">
+				<input type="checkbox" class="flip-toggle" th:id="${'flip-' + ck}" />
+				<div class="flipper">
+					<label class="face front" th:for="${'flip-' + ck}">
+						<span class="badge" th:text="${c.category().label}">Theme</span>
+						<h3 th:text="${c.front()}">Term</h3>
+						<p class="muted">click to flip ↓</p>
+					</label>
+					<label class="face back" th:for="${'flip-' + ck}">
+						<p th:text="${c.back()}">Definition</p>
+					</label>
+				</div>
+			</div>
+		</div>
+		<p class="muted small" th:if="${#lists.isEmpty(deck)}">No cards in this theme.</p>
+	</th:block>
+
+</body>
+
+</html>

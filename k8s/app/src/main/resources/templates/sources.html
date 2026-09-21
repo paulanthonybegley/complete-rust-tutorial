@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Sources &amp; chapter map · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<h1>Chapter <span class="accent">map</span> of the video</h1>
+		<p class="lead">
+			The 25 timestamps of <a th:href="${videoUrl}" target="_blank" rel="noopener" th:text="${videoTitle}">video</a>,
+			each attached to the station that simulates it. Watch a chapter, then come here and re-run its ideas
+			on your own.
+		</p>
+	</section>
+
+	<table class="mini">
+		<tr><th>#</th><th>chapter</th><th>at</th><th>simulated in</th></tr>
+		<tr th:each="s : ${sources}">
+			<td th:text="${s.order}">1</td>
+			<td th:text="${s.chapter}">chapter</td>
+			<td class="mono" th:text="${s.at}">0:00</td>
+			<td><a th:href="|/${s.sim}|" th:text="${s.sim}">station</a></td>
+		</tr>
+	</table>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

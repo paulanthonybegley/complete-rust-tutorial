@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Sources &amp; framing</p>
+			<h1>One video, one arc.</h1>
+			<p class="lead">
+				Everything in this lab traces to a single featured video, chapter by chapter. Use the timestamps to jump
+				to the exact moment behind each lab.
+			</p>
+		</section>
+
+		<section>
+			<h2 class="section-title">Featured source</h2>
+			<article class="card source">
+				<div class="card-top">
+					<span class="badge">YouTube · JavaScript Mastery</span>
+					<span class="status st-shipped">≈15:30</span>
+				</div>
+				<h3>DevOps from Zero to Hero: Build and Deploy a Production API</h3>
+				<p class="summary">
+					Fundamentals and the tools behind them, then a full production API (auth, RBAC, validation,
+					logging, bot defense, Postgres, Docker, pipelines, Kubernetes) — containerized, tested, deployed
+					and monitored end to end.
+				</p>
+				<a class="btn" href="https://www.youtube.com/watch?v=H5FAxTBuNM8" target="_blank" rel="noopener">Watch
+					on YouTube →</a>
+			</article>
+		</section>
+
+		<section>
+			<h2 class="section-title">Chapter map → our labs</h2>
+			<table class="tf">
+				<thead>
+					<tr>
+						<th>Chapter</th>
+						<th>Topic</th>
+						<th>In this lab</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr><td>00:06:04</td><td>Introduction to DevOps — culture, not tools</td><td><a th:href="@{/concepts(cat=${T(com.example.devops.model.Category).CULTURE})}">concepts</a></td></tr>
+					<tr><td>00:20:41</td><td>What you need to learn</td><td><a th:href="@{/concepts}">concept map</a></td></tr>
+					<tr><td>00:25:42</td><td>Version control — Git &amp; GitHub</td><td><a th:href="@{/git}">git lab</a></td></tr>
+					<tr><td>00:50:33</td><td>CI/CD pipelines</td><td><a href="/docker#step-pipeline">container lab · pipeline</a></td></tr>
+					<tr><td>00:55:06</td><td>Build your first pipeline</td><td><a href="/docker#step-pipeline">container lab · pipeline</a></td></tr>
+					<tr><td>01:03:21</td><td>Docker crash course</td><td><a href="/docker#step-docker">container lab · build</a></td></tr>
+					<tr><td>01:55:39</td><td>Kubernetes crash course</td><td><a href="/docker#step-k8s">container lab · cluster</a></td></tr>
+					<tr><td>02:26:34</td><td>Infrastructure as Code</td><td><a th:href="@{/iac}">iac lab</a></td></tr>
+					<tr><td>02:29:37</td><td>Build &amp; deploy the API</td><td><a th:href="@{/ship}">ship it</a></td></tr>
+					<tr><td>02:46:09</td><td>Database setup</td><td>—</td></tr>
+					<tr><td>03:05:15</td><td>Authentication (JWT) + RBAC</td><td><a th:href="@{/quiz}">quiz</a></td></tr>
+					<tr><td>03:47:53</td><td>Security middleware</td><td><a th:href="@{/security}">security lab</a></td></tr>
+					<tr><td>04:03:11</td><td>Dockerization</td><td><a href="/docker#step-docker">container lab · build</a></td></tr>
+					<tr><td>04:21:49</td><td>User CRUD</td><td><a th:href="@{/ship}">mapped to api-rules</a></td></tr>
+					<tr><td>04:38:50</td><td>Testing</td><td><a href="/docker#step-pipeline">container lab · pipeline</a></td></tr>
+					<tr><td>04:48:35</td><td>Next steps</td><td><a th:href="@{/ship}">the integration project</a></td></tr>
+				</tbody>
+			</table>
+		</section>
+
+		<section>
+			<h2 class="section-title">Framing test</h2>
+			<p class="verdict">
+				Read/watch it as a systems course, not a tool list: every acronym in the closing deploy was introduced
+				in the opening loop. If you can draw the infinity loop and name the tool at every stage — Plan·Code·Build·Test
+				·Release·Deploy·Operate·Monitor — then a question like “what backs the deploy stage?” should answer
+				itself.
+			</p>
+		</section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

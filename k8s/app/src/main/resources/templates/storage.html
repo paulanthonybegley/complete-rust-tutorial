@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Storage · PersistentVolumes &amp; PVCs · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 1:52:34 Storage</span>
+		</div>
+		<h1>Storage that <span class="accent">survives the pod</span></h1>
+		<p class="lead">
+			Inside a container, writes are ephemeral; delete the pod and they're gone. The escape hatch is a
+			<strong>PersistentVolume</strong> (storage that exists independently) claimed by a
+			<strong>PersistentVolumeClaim</strong> (your request form), mounted into the pod at a path. This station
+			proves the difference by writing files and bouncing the pod.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">The volumes that exist in this cluster</span>
+		</div>
+		<div class="grid3">
+			<div class="card">
+				<div class="card-head">PersistentVolumes (cluster-wide)</div>
+				<table class="mini">
+					<tr><th>pv</th><th>class</th><th>mode</th><th>phase</th><th>claim</th></tr>
+					<tr th:each="pv : ${pvs}">
+						<td class="mono" th:text="${pv.name}">pv</td>
+						<td th:text="${pv.storageClass}">class</td>
+						<td th:text="${pv.accessMode}">mode</td>
+						<td th:text="${pv.phase}">phase</td>
+						<td th:text="${pv.claim.isEmpty() ? '—' : pv.claim}">claim</td>
+					</tr>
+				</table>
+			</div>
+			<div class="card">
+				<div class="card-head">PersistentVolumeClaims (namespaced)</div>
+				<table class="mini">
+					<tr><th>pvc</th><th>request</th><th>phase</th><th>bound to</th></tr>
+					<tr th:each="pc : ${pvcs}">
+						<td class="mono" th:text="${pc.name}">pvc</td>
+						<td th:text="${pc.requestGi + 'Gi (' + pc.storageClass + ')'}">req</td>
+						<td th:text="${pc.phase}">phase</td>
+						<td th:text="${pc.boundTo.isEmpty() ? '—' : pc.boundTo}">pv</td>
+					</tr>
+				</table>
+				<p class="muted small">A claim is <span class="mono">Pending</span> until the scheduler matches it
+					to a compatible PV (class, mode, size).</p>
+			</div>
+			<div class="card">
+				<div class="card-head">The lifecycle</div>
+				<ul>
+					<li><strong>Static:</strong> admin pre-creates PVs; claims bind to them.</li>
+					<li><strong>Dynamic:</strong> a StorageClass with a provisioner makes PVs on demand.</li>
+					<li><strong>Reclaim:</strong> <span class="mono">Retain / Delete / Recycle</span> decides what
+						happens to data when the claim is released.</li>
+				</ul>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">The survival experiment — write, bounce, read back</span>
+			<span class="step-hint"><span class="mono">/data/persistent/</span> is PVC-backed · <span class="mono">/data/</span> is a scratch emptyDir</span>
+		</div>
+
+		<form method="post" th:action="@{/storage}">
+			<div class="ctl">
+				<input type="text" name="name" size="20" value="winning.txt" style="font-family:monospace" />
+				<input type="text" name="content" size="24" value="k8s_persisted_me" style="font-family:monospace" />
+				<button class="btn" type="submit" name="action" value="write-persistent">write → /data/persistent/</button>
+				<button class="btn ghost" type="submit" name="action" value="write-ephemeral">write → /data/</button>
+				<button class="btn danger" type="submit" name="action" value="bounce">recreate the pod</button>
+			</div>
+		</form>
+
+		<form method="post" th:action="@{/storage}" style="margin-top:.4rem">
+			<div class="ctl">
+				<label class="tight">new claim:</label>
+				<input type="text" name="name" size="14" value="claims-b" style="font-family:monospace" />
+				<input type="number" name="sizeGi" size="3" value="2" min="1" max="20" style="width:4rem" />
+				<select name="cls">
+					<option th:each="c : ${classes}" th:value="${c}" th:text="${c}">class</option>
+				</select>
+				<select name="mode">
+					<option th:each="m : ${modes}" th:value="${m}" th:text="${m}">mode</option>
+				</select>
+				<button class="btn" type="submit" name="action" value="claim">create PVC</button>
+			</div>
+		</form>
+
+		<div id="result" class="grid3">
+			<div class="card">
+				<div class="card-head">Data on the persistent volume — survives everything</div>
+				<table class="mini">
+					<tr><th>path</th><th>size</th></tr>
+					<tr th:each="f : ${persistentFiles.values()}">
+						<td class="mono" th:text="${f.path}">/data/persistent/..</td>
+						<td th:text="${f.size}">0</td>
+					</tr>
+					<tr th:if="${#lists.isEmpty(persistentFiles.values())}"><td colspan="2" class="muted">nothing persisted yet</td></tr>
+				</table>
+			</div>
+			<div class="card">
+				<div class="card-head">Pod filesystem now</div>
+				<table class="mini">
+					<tr><th>path</th><th>size</th></tr>
+					<tr th:each="f : ${podFiles.values()}">
+						<td class="mono" th:text="${f.path}">/data/..</td>
+						<td th:text="${f.size}">0</td>
+					</tr>
+				</table>
+			</div>
+			<div class="card lesson">
+				<div class="card-head">What you should have seen</div>
+				<p>Write a file to <code>/data/</code> and to <code>/data/persistent/</code>. Now
+					<strong>recreate the pod</strong> — both are gone from the pod view… but the persistent one is
+					back, because a bound PVC outlives its consumer. <code>emptyDir</code> dies with the pod.
+					That's the whole story.</p>
+			</div>
+		</div>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/services}">Next: Services — the stable front door →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

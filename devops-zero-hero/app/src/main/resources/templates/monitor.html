@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Lab · Observability</p>
+			<h1>You can't operate what you can't see.</h1>
+			<p class="lead">
+				Health probes, latency, error rate — and the alert that turns a metric into a human being woken up at
+				3 a.m. Make a pod sick and watch the panel react.
+			</p>
+
+			<form class="ctl" hx-get="/monitor/sample" hx-target="#panel" hx-swap="innerHTML">
+				<label class="check"><input type="checkbox" name="unhealthy" value="true" th:checked="${unhealthy}" />
+					pod went unhealthy</label>
+				<input type="hidden" name="unhealthy" value="false" />
+				<label class="check"><input type="checkbox" name="autoHeal" value="true" th:checked="${autoHeal}" />
+					auto-heal enabled (orchestrator)</label>
+				<input type="hidden" name="autoHeal" value="false" />
+				<button class="btn" type="submit">Sample now</button>
+			</form>
+		</section>
+
+		<section id="panel" th:insert="~{_fragments :: monitorPanel}"></section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

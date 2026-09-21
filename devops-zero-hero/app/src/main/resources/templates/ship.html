@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">The point of the course</p>
+			<h1>Ship the API. Zero → Hero.</h1>
+			<p class="lead">
+				The video builds a production marketplace and ships it. Our production API already exists —
+				<a th:href="@{/concepts/detail?id=ship}">the <em>api-rules</em> app from the previous course</a>, with 19
+				tests and versioned contracts. Everything below is the "acquisitions" arc applied to it.
+			</p>
+		</section>
+
+		<section>
+			<h2 class="section-title">The shipping loop</h2>
+			<div class="ship-track">
+				<div class="ship-step">
+					<span class="ship-num">1</span>
+					<h3>Containerize</h3>
+					<p>Dockerfile, multi-stage, <code>.dockerignore</code>, health probe.</p>
+				</div>
+				<div class="ship-step">
+					<span class="ship-num">2</span>
+					<h3>Pipeline</h3>
+					<p>Every commit: test → package → scan → build &amp; push the image.</p>
+				</div>
+				<div class="ship-step">
+					<span class="ship-num">3</span>
+					<h3>Deploy</h3>
+					<p>Kubernetes manifest with replicas, probes and rolling updates.</p>
+				</div>
+				<div class="ship-step">
+					<span class="ship-num">4</span>
+					<h3>Watch</h3>
+					<p>Health and metrics feed the loop back to plan — monitor, learn, repeat.</p>
+				</div>
+			</div>
+		</section>
+
+		<section>
+			<h2 class="section-title">What the video runs, mapped to our kit</h2>
+			<table class="tf">
+				<thead>
+					<tr>
+						<th>Video (JavaScript Mastery)</th>
+						<th>Our stack</th>
+						<th>Where</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Node API + Neon Postgres + Drizzle</td>
+						<td>Spring Boot 4.1.1 REST API (in-memory, 19 tests)</td>
+						<td><code>../eighth-api-rules/app</code></td>
+					</tr>
+					<tr>
+						<td>Zod request validation</td>
+						<td>Bean Validation 422s with field errors</td>
+						<td>api-rules <code>request</code> records</td>
+					</tr>
+					<tr>
+						<td>Winston structured logging</td>
+						<td>structured log examples on the Monitor lab</td>
+						<td>this app, <a th:href="@{/monitor}">/monitor</a></td>
+					</tr>
+					<tr>
+						<td>JWT auth + RBAC</td>
+						<td>theme covered; the api-rules API is public by design</td>
+						<td>quiz + <a th:href="@{/concepts}">security card</a></td>
+					</tr>
+					<tr>
+						<td>Arcjet bot protection</td>
+						<td>edge-guard simulator</td>
+						<td><a th:href="@{/security}">/security</a></td>
+					</tr>
+					<tr>
+						<td>Docker / Compose</td>
+						<td>multi-stage image + compose file</td>
+						<td><code>deploy/Dockerfile.api-rules</code></td>
+					</tr>
+					<tr>
+						<td>GitHub Actions pipeline</td>
+						<td>CI/CD workflow (test → package → image → manifest)</td>
+						<td><code>deploy/.github/workflows</code></td>
+					</tr>
+					<tr>
+						<td>Kubernetes deploy</td>
+						<td>Deployment + Service + probes</td>
+						<td><code>deploy/k8s/api-rules.yaml</code></td>
+					</tr>
+					<tr>
+						<td>Infrastructure as Code</td>
+						<td>Terraform sample</td>
+						<td><code>deploy/terraform/main.tf</code></td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+
+		<section class="ship-kit">
+			<h2 class="section-title">The kit, in four files</h2>
+			<pre class="brush"><span class="c"># 1 · image</span>
+docker build -f deploy/Dockerfile.api-rules -t api-rules:1.0.0 .
+<span class="c"># 2 · verify locally</span>
+docker run --rm -p 8080:8080 -e API_VERSION_REQUIRED=true api-rules:1.0.0
+curl -H "API-Version: 1.1" localhost:8080/products/1
+<span class="c"># 3 · pipeline (GitHub Actions) tests + pushes on every commit</span>
+<span class="c"># 4 · manifest + IaC repeat the deploy on any cluster</span>
+kubectl apply -f deploy/k8s/api-rules.yaml</pre>
+			<p class="muted small">Full walkthrough: <code>deploy/README.md</code> — the same four-step arc as the video,
+				with the api-rules API doing the starring role.</p>
+		</section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

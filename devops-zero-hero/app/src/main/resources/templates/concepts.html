@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Concept explorer</p>
+			<h1>Every feature the video raises, as a card.</h1>
+			<p class="lead">
+				Thirteen concepts — from <strong>what DevOps is</strong> to <strong>shipping the API</strong>. Filter by
+				theme, then <strong>Open →</strong> a card to read what the video says and the commands that make it real.
+			</p>
+
+			<nav class="themes" th:id="'concept-themes'">
+				<a th:classappend="${selected == null} ? ' on' : ''" th:href="@{/concepts}"
+					hx-get="/concepts/grid" hx-target="#grid" hx-swap="innerHTML">All</a>
+				<a th:each="c : ${navCategories}" th:classappend="${selected == c} ? ' on' : ''"
+					th:href="@{/concepts(cat=${c})}" th:attr="hx-get=${'/concepts/grid?cat=' + c.name()}"
+					hx-target="#grid" hx-swap="innerHTML" th:text="${c.label}">Theme</a>
+			</nav>
+		</section>
+
+		<section th:id="'grid'" th:insert="~{_fragments :: conceptsGrid}"></section>
+
+		<div id="concept-detail" class="drawer"></div>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

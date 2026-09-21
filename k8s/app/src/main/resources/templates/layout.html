@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="head">
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title th:text="${pageTitle != null ? pageTitle + ' · Kubernetes Zero→Hero' : 'Kubernetes Zero→Hero'}">Kubernetes Zero→Hero</title>
+	<link rel="icon" href="data:," />
+	<link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css" />
+	<script th:src="@{/js/htmx.min.js}" src="/js/htmx.min.js" defer></script>
+</head>
+
+<body>
+
+<th:block th:fragment="topbar">
+	<header class="topbar">
+		<a class="brand" th:href="@{/}">
+			<span class="brand-star">⬡</span> Kubernetes <em>Zero→Hero</em>
+		</a>
+		<nav class="nav">
+			<a th:href="@{/}">Home</a>
+			<a th:href="@{/arch}">Arch</a>
+			<a th:href="@{/manifest}">Manifest</a>
+			<a th:href="@{/pods}">Pods</a>
+			<a th:href="@{/resources}">Limits</a>
+			<a th:href="@{/probes}">Probes</a>
+			<a th:href="@{/exec}">exec</a>
+			<a th:href="@{/logs}">Logs</a>
+			<a th:href="@{/config}">Config</a>
+			<a th:href="@{/deploys}">Deploys</a>
+			<a th:href="@{/storage}">Storage</a>
+			<a th:href="@{/services}">Services</a>
+			<a th:href="@{/netpol}">NetPol</a>
+			<a th:href="@{/quiz}">Quiz</a>
+			<a th:href="@{/flashcards}">Cards</a>
+			<a th:href="@{/ship}">Ship it</a>
+		</nav>
+	</header>
+</th:block>
+
+<th:block th:fragment="footer">
+	<footer class="footer">
+		<p>
+			Kubernetes Zero→Hero — an interactive course built around the video
+			<a href="https://www.youtube.com/watch?v=MTHGoGUFpvE" target="_blank" rel="noopener">“Kubernetes Zero to Hero:
+				The Complete Beginner's Guide (2025 Edition)”</a>
+			(Alta3 Research).
+		</p>
+		<p class="muted">Built on the OLD.jpg framework: <em>“A lesson plan is a system, not a prompt.”</em> ©
+			<span th:text="${currentYear}">2026</span></p>
+	</footer>
+</th:block>
+
+</body>
+</html>

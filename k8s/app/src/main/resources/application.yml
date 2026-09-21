@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: k8s-zero-hero
+  thymeleaf:
+    cache: false
+server:
+  port: 8080

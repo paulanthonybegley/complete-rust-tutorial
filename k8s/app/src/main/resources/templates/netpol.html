@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Network Policies · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 2:15:08 Network Policies</span>
+		</div>
+		<h1>Network <span class="accent">Policies</span>: traffic by permission</h1>
+		<p class="lead">
+			By default Kubernetes allows <em>everything</em> between pods. A NetworkPolicy opts pods <em>in</em> to
+			rules: pick the target with a selector, choose <strong>Ingress</strong> (who may send in),
+			<strong>Egress</strong> (who may reach out), then list the sources/destinations allowed. The moment a
+			selected pod gets no rule, its traffic is denied — that's the famous <em>default-deny</em>.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">Existing policies</span>
+		</div>
+		<table class="mini">
+			<tr><th>policy</th><th>podSelector</th><th>types</th><th>ingress from</th><th>egress to</th><th>port</th></tr>
+			<tr th:each="np : ${policies}">
+				<td class="mono" th:text="${np.namespace + '/' + np.name}">pol</td>
+				<td class="mono" th:text="${np.podSelector}">sel</td>
+				<td th:text="${#strings.listJoin(np.policyTypes, ',')}">types</td>
+				<td th:text="${#lists.isEmpty(np.ingressFrom) ? 'deny-all' : np.ingressFrom}">in</td>
+				<td th:text="${#lists.isEmpty(np.egressTo) ? 'deny-all' : np.egressTo}">out</td>
+				<td th:text="${np.port}">port</td>
+			</tr>
+		</table>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">Build a policy, watch the traffic matrix</span>
+		</div>
+
+		<form hx-post="/netpol" hx-target="#netpol-out">
+			<div class="grid3">
+				<div class="card">
+					<div class="card-head">Target pods</div>
+					<select name="target">
+						<option th:each="t : ${targetApps}" th:value="${t}" th:text="${'app=' + t + ' (all its pods)'}"
+							th:selected="${t == 'web'}">app=web</option>
+					</select>
+					<p class="muted small">Pod selector: <span class="mono">matchLabels</span> — every pod carrying this label is governed.</p>
+				</div>
+				<div class="card">
+					<div class="card-head">Traffic to control</div>
+					<div class="ctl">
+						<label class="tight"><input type="checkbox" name="types" value="Ingress" checked /> Ingress</label>
+						<label class="tight"><input type="checkbox" name="types" value="Egress" checked /> Egress</label>
+					</div>
+					<div class="ctl" style="margin-top:.6rem">
+						<label class="tight">from</label>
+						<input type="text" name="from" value="app=db" size="18" style="font-family:monospace" />
+					</div>
+					<div class="ctl" style="margin-top:.4rem">
+						<label class="tight">to</label>
+						<input type="text" name="to" value="dns" size="18" style="font-family:monospace" />
+					</div>
+					<div class="ctl" style="margin-top:.4rem">
+						<label class="tight">port</label>
+						<input type="number" name="port" value="8080" size="4" style="width:5rem" />
+					</div>
+				</div>
+				<div class="card" style="justify-content:center">
+					<button class="btn" type="submit">apply the policy</button>
+					<p class="muted small">An <strong>empty</strong> from/to list is meaningful: it means deny-all
+						for that direction.</p>
+				</div>
+			</div>
+		</form>
+
+		<div id="netpol-out" th:if="${matrix != null}" th:include="~{fragments :: netpolResult}"></div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">3</span>
+			<span class="step-name">Practice scenarios</span>
+		</div>
+		<table class="mini">
+			<tr><th>scenario</th><th>manifest shape</th></tr>
+			<tr><td>default-deny ingress for api-tier</td><td class="mono">ingress: []</td></tr>
+			<tr><td>only the db may reach api:8080</td><td class="mono">from: [{ podSelector: { matchLabels: { app: db } } }]</td></tr>
+			<tr><td>allow egress only to DNS (UDP 53)</td><td class="mono">egress: [{ to: [ { namespaceSelector match} ], ports [udp:53] }]</td></tr>
+			<tr><td>allow ingress from the whole namespace</td><td class="mono">from: [{ namespaceSelector: {} }]</td></tr>
+		</table>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/quiz}">Cement it all in the quiz →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

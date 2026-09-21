@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Revision decks</p>
+			<h1>Flip until it sticks.</h1>
+			<p class="lead">Term on the front, definition on the back. Filter by theme, and the spotlight card shuffles
+				itself for a quick-fire recap.</p>
+
+			<nav class="themes">
+				<a th:classappend="${selected == null} ? ' on' : ''" th:href="@{/flashcards}"
+					hx-get="/flashcards/grid" hx-target="#deck" hx-swap="innerHTML">All</a>
+				<a th:each="c : ${navCategories}" th:classappend="${selected == c} ? ' on' : ''"
+					th:href="@{/flashcards(cat=${c})}" th:attr="hx-get=${'/flashcards/grid?cat=' + c.name()}"
+					hx-target="#deck" hx-swap="innerHTML" th:text="${c.label}">Theme</a>
+			</nav>
+		</section>
+
+		<section class="spotlight-row">
+			<h2 class="section-title">Spotlight card</h2>
+			<div id="spotlight" th:insert="~{_fragments :: flashcardCard}"></div>
+			<form class="ctl" hx-get="/flashcards/next" hx-target="#spotlight" hx-swap="innerHTML">
+				<input type="hidden" name="cat" th:value="${selected != null ? selected : ''}" />
+				<button class="btn" type="submit">Shuffle spotlight</button>
+			</form>
+		</section>
+
+		<section th:id="'deck'" th:insert="~{_fragments :: flashcardGrid}"></section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

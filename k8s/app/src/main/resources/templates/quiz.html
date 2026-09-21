@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Quiz · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<h1>The <span class="accent">quiz</span> — self-grading, zero fluff</h1>
+		<p class="lead">
+			<span th:if="${correct == null}">Answer all 20; press the button and the grading is instant —
+			right/wrong plus the reasoning the video gives you.</span>
+			<span th:if="${correct != null}">You scored <strong class="big-stat accent" th:text="${score + '/' + total}"></strong> —
+			each question explains itself, so use the misses as a map back to the right station.</span>
+		</p>
+	</section>
+
+	<form method="post" th:action="@{/quiz}">
+		<div class="quiz-grid">
+			<div class="card quiz" th:each="item, i : ${quiz}">
+				<div class="card-head">
+					<span class="meta-kicker" th:text="${'Q' + (i.index + 1)}">Q1</span>
+					<span th:if="${correct != null}" th:class="${correct[i.index] ? 'ok-line' : 'bad-line'}"
+						th:text="${correct[i.index] ? '✓ correct' : '✗ wrong'}">state</span>
+				</div>
+				<p th:text="${item.q}">question</p>
+				<div class="q-opt" th:each="opt, o : ${item.options}">
+					<input type="radio" th:name="|q${i.index}|" th:value="${o.index}" th:id="|q${i.index}-o${o.index}|" />
+					<label th:for="|q${i.index}-o${o.index}|" th:text="${opt}">option</label>
+				</div>
+				<p class="why" th:if="${correct != null}" th:text="${'why: ' + item.why}">why</p>
+			</div>
+		</div>
+
+		<div class="ctl" style="margin-top:2rem">
+			<button class="btn" type="submit" th:text="${correct != null ? 're-grade' : 'grade me'}">grade</button>
+		</div>
+	</form>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

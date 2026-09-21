@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Lab · Security</p>
+			<h1>Security isn't later. It's day one.</h1>
+			<p class="lead">
+				Play the edge guard the video puts in front of its API: shape a request, set how bot-like it looks, and
+				watch the risk score decide — <strong>allow</strong> or <strong>block</strong>.
+			</p>
+
+			<form class="ctl" hx-get="/security/check" hx-target="#verdict" hx-swap="innerHTML">
+				<label>Client
+					<select name="kind">
+						<option value="browser" th:selected="${kind == 'browser'}">real browser</option>
+						<option value="curl" th:selected="${kind == 'curl'}">curl script</option>
+						<option value="scraper" th:selected="${kind == 'scraper'}">content scraper</option>
+						<option value="spammer" th:selected="${kind == 'spammer'}">spammer</option>
+					</select>
+				</label>
+				<label>Bot-likeness <input type="number" name="botLike" min="0" max="100" th:value="${botLike}" /></label>
+				<label class="check"><input type="checkbox" name="hasKey" value="true" th:checked="${hasKey}" /> valid
+					API key presented</label>
+				<input type="hidden" name="hasKey" value="false" />
+				<button class="btn" type="submit">Run guard</button>
+			</form>
+		</section>
+
+		<section id="verdict" th:insert="~{_fragments :: securityVerdict}"></section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

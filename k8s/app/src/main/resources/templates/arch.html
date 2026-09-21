@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Architecture · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 0:01:42</span>
+			<span class="kicker">continuing from the video</span>
+		</div>
+		<h1>Kubernetes <span class="accent">Architecture</span> &amp; Purpose</h1>
+		<p class="lead">
+			Two halves make the cluster move: the <strong>control plane</strong> (the brain — API server,
+			scheduler, controller-manager, etcd) and the <strong>worker nodes</strong> (the muscles — kubelet,
+			container runtime, kube-proxy). The magic is that the brain only ever agrees on <em>desired state</em>;
+			the workers converge reality toward it.
+		</p>
+	</section>
+
+	<div class="step-head">
+		<span class="step-name">Trace a request: click each hop</span>
+		<span class="step-hint">step <span th:text="${active}">1</span> of <span th:text="${#lists.size(trace)}">8</span></span>
+	</div>
+
+	<div class="grid3">
+		<div>
+			<ol class="trace">
+				<li th:each="s : ${trace}" th:classappend="${active == s.n ? 'active' : ''}">
+					<a class="n" th:href="@{/arch(step=${s.n})}" th:text="${s.n}">1</a>
+					<div>
+						<div class="fw" th:text="${s.sender + ' → ' + s.receiver}">you → API server</div>
+						<div class="details" th:text="${s.detail}">detail</div>
+					</div>
+				</li>
+			</ol>
+		</div>
+		<div>
+			<div class="card">
+				<div class="card-head">Step <span th:text="${activeStep.n}">1</span> — what just happened</div>
+				<h3 th:text="${activeStep.sender + ' → ' + activeStep.receiver}">hop</h3>
+				<p th:text="${activeStep.detail}"></p>
+			</div>
+		</div>
+		<div class="card lesson">
+			<div class="card-head">The purpose, in one paragraph</div>
+			<p>
+				Your <code>kubectl apply</code> never 'pushes a pod to a node'. It writes one line of desired state
+				into <strong>etcd</strong>. From then on, watchers fire: the scheduler picks a node, the controller
+				manager creates objects, the kubelet on that node starts containers — each controller pulling reality
+				toward the manifest, forever, on its own loop.
+			</p>
+			<p class="muted">This loop — <strong>declare → watch → reconcile</strong> — is the single idea underneath
+				every other chapter of the video. Health checks, scaling, rollouts, self-healing: all of them are
+				just reconciliation running on a schedule.</p>
+		</div>
+	</div>
+
+	<section>
+		<h2 class="section-title">Control plane vs worker — memory box</h2>
+		<table class="mini">
+			<tr>
+				<th></th>
+				<th>Control plane (the brain)</th>
+				<th>Worker node (the muscles)</th>
+			</tr>
+			<tr>
+				<td class="fw">Components</td>
+				<td>kube-apiserver · etcd · kube-scheduler · kube-controller-manager</td>
+				<td>kubelet · container runtime (containerd) · kube-proxy</td>
+			</tr>
+			<tr>
+				<td class="fw">Deal with…</td>
+				<td>desired state: what should exist</td>
+				<td>reality: the containers that must run</td>
+			</tr>
+			<tr>
+				<td class="fw">Who writes etcd</td>
+				<td>only the API server</td>
+				<td>no direct access</td>
+			</tr>
+			<tr>
+				<td class="fw">Seen here</td>
+				<td>4 control-plane pods in kube-system</td>
+				<td>3 nodes in <span class="mono">kubectl get nodes</span></td>
+			</tr>
+		</table>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/pods}">Next: watch the loop with pods →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

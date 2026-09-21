@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Lab · Containers — the whole arc</p>
+			<h1>One image. The pipeline makes it, Docker packs it, the cluster runs it.</h1>
+			<p class="lead">
+				This is the ship-an-image story in three panels: the CI/CD pipeline builds the <em>api-rules</em> jar,
+				the Docker layer cache shows exactly what a change costs to rebuild, and Kubernetes keeps the running
+				replicas at the desired state. Each panel is a live simulator — break it and watch the same result a
+				real pipeline, build or cluster would show. The standalone <a href="/pipeline">pipeline</a> and
+				<a href="/k8s">kubernetes</a> pages are part of this flow.
+			</p>
+		</section>
+
+		<section class="lab-step" id="step-pipeline">
+			<div class="step-head">
+				<span class="step-num">1</span>
+				<span class="step-name">The pipeline ships it</span>
+				<span class="step-hint">CI/CD · tests never red</span>
+			</div>
+			<form class="ctl" hx-get="/pipeline/run" hx-target="#run-result" hx-swap="innerHTML">
+				<label>Make the pipeline fail at
+					<select name="failAt">
+						<option value="none" th:selected="${failAt == 'none'}">nothing — green run</option>
+						<option value="checkout" th:selected="${failAt == 'checkout'}">Checkout</option>
+						<option value="compile" th:selected="${failAt == 'compile'}">Compile &amp; package</option>
+						<option value="tests" th:selected="${failAt == 'tests'}">Unit &amp; integration tests</option>
+						<option value="scan" th:selected="${failAt == 'scan'}">Security scan</option>
+						<option value="image" th:selected="${failAt == 'image'}">Build image</option>
+						<option value="push" th:selected="${failAt == 'push'}">Push to registry</option>
+						<option value="deploy" th:selected="${failAt == 'deploy'}">Deploy to cluster</option>
+						<option value="verify" th:selected="${failAt == 'verify'}">Verify &amp; smoke</option>
+					</select>
+				</label>
+				<button class="btn" type="submit">Run pipeline</button>
+			</form>
+			<section id="run-result" th:insert="~{_fragments :: pipelineRun}"></section>
+		</section>
+
+		<section class="lab-step" id="step-docker">
+			<div class="step-head">
+				<span class="step-num">2</span>
+				<span class="step-name">The build packs it</span>
+				<span class="step-hint">Docker · layers &amp; cache</span>
+			</div>
+			<form class="ctl" hx-get="/docker/build" hx-target="#layers" hx-swap="innerHTML">
+				<label>What changed in the source?
+					<select name="change">
+						<option value="src" th:selected="${change == 'src'}">a Java source file</option>
+						<option value="pom" th:selected="${change == 'pom'}">pom.xml (dependencies)</option>
+						<option value="base" th:selected="${change == 'base'}">the base image</option>
+					</select>
+				</label>
+				<label class="check"><input type="checkbox" name="noCache" value="true" th:checked="${noCache}" />
+					force --no-cache</label>
+				<input type="hidden" name="noCache" value="false" />
+				<button class="btn" type="submit">Rebuild image</button>
+			</form>
+			<section id="layers" th:with="result=${dresult}" th:insert="~{_fragments :: dockerLayers}"></section>
+		</section>
+
+		<section class="lab-step" id="step-k8s">
+			<div class="step-head">
+				<span class="step-num">3</span>
+				<span class="step-name">The cluster runs it</span>
+				<span class="step-hint">Kubernetes · desired state</span>
+			</div>
+			<form class="ctl" hx-get="/k8s/reconcile" hx-target="#cluster" hx-swap="innerHTML">
+				<label>Desired replicas (1–5)
+					<input type="number" name="replicas" min="1" max="5" th:value="${kreplicas}" />
+				</label>
+				<label>Kill a pod
+					<select name="killPod">
+						<option value="">none</option>
+						<option value="1" th:selected="${killPod == 1}">pod 1</option>
+						<option value="2" th:selected="${killPod == 2}">pod 2</option>
+						<option value="3" th:selected="${killPod == 3}">pod 3</option>
+						<option value="4" th:selected="${killPod == 4}">pod 4</option>
+						<option value="5" th:selected="${killPod == 5}">pod 5</option>
+					</select>
+				</label>
+				<label class="check"><input type="checkbox" name="rolling" value="true" th:checked="${rolling}" /> rolling update</label>
+				<input type="hidden" name="rolling" value="false" />
+				<button class="btn" type="submit">Reconcile</button>
+			</form>
+			<section id="cluster" th:with="result=${kresult}" th:insert="~{_fragments :: k8sCluster}"></section>
+		</section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

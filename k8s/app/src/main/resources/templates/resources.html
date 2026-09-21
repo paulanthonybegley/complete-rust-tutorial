@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Requests &amp; Limits · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 0:41:43 Resource monitoring</span>
+			<span class="chip">0:44:56 Requests &amp; Limits</span>
+		</div>
+		<h1>Requests, <span class="accent">Limits</span> &amp; the QoS classes</h1>
+		<p class="lead">
+			<strong>Requests</strong> are what the scheduler books for you — they decide whether a pod fits a node.
+			<strong>Limits</strong> are the cap the kubelet enforces: CPU over the limit gets <em>throttled</em>;
+			memory over the limit gets an <em>OOM kill</em>. The relationship between them puts every pod into one
+			of three QoS classes, which decides its eviction priority when the node is under pressure.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">Reshape one pod and watch the class change</span>
+			<span class="step-hint">target: <span class="mono" th:text="${pod.name}">web pod</span></span>
+		</div>
+
+		<form method="post" th:action="@{/resources}">
+			<div class="grid3">
+				<div class="card">
+					<div class="card-head">CPU (millicores)</div>
+					<div class="stat-row"><span class="meta-kicker">requests</span><input type="range" name="cpuReq" min="0" max="1000" step="50" th:value="${pod.cpuReq}" /></div>
+					<div class="stat-row"><span class="meta-kicker">limits</span><input type="range" name="cpuLim" min="0" max="1000" step="50" th:value="${pod.cpuLim}" /></div>
+					<div class="stat-row"><span class="meta-kicker">usage now</span><input type="range" name="cpuUse" min="0" max="1200" step="20" th:value="${pod.cpuUse}" /></div>
+				</div>
+				<div class="card">
+					<div class="card-head">Memory (Mi)</div>
+					<div class="stat-row"><span class="meta-kicker">requests</span><input type="range" name="memReq" min="0" max="1024" step="16" th:value="${pod.memReq}" /></div>
+					<div class="stat-row"><span class="meta-kicker">limits</span><input type="range" name="memLim" min="0" max="1024" step="16" th:value="${pod.memLim}" /></div>
+					<div class="stat-row"><span class="meta-kicker">usage now</span><input type="range" name="memUse" min="0" max="1200" step="16" th:value="${pod.memUse}" /></div>
+				</div>
+				<div class="card" style="justify-content:center">
+					<button class="btn" type="submit">apply — re-schedule</button>
+					<p class="muted small">Watch the QoS line below change the moment requests meet limits on both dimensions.</p>
+				</div>
+			</div>
+		</form>
+
+		<div id="result">
+			<div class="result-box" th:classappend="${qos.runtimeRisk.startsWith('normal') ? ' ok' : ' bad'}">
+				<div class="stat-grid">
+					<div class="stat-row"><span class="meta-kicker">QoS class</span><strong class="big-stat accent"
+							th:text="${qos.className}">Burstable</strong></div>
+					<div class="stat-row"><span class="meta-kicker">CPU req/lim/use</span>
+						<span th:text="${qos.cpuReq + 'm / ' + qos.cpuLim + 'm / ' + qos.cpuUse + 'm'}"></span></div>
+					<div class="stat-row"><span class="meta-kicker">memory req/lim/use</span>
+						<span th:text="${qos.memReq + 'Mi / ' + qos.memLim + 'Mi / ' + qos.memUse + 'Mi'}"></span></div>
+				</div>
+				<p class="muted" th:text="${qos.why}">why</p>
+				<p th:class="${qos.runtimeRisk.startsWith('normal') ? 'ok-line' : 'bad-line'}" th:text="${qos.runtimeRisk}">risk</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">Node fit — the scheduler's arithmetic</span>
+			<span class="step-hint">all pod requests must pack into a node's allocatable capacity</span>
+		</div>
+		<div class="grid3">
+			<div class="card">
+				<div class="card-head">Cluster-wide totals</div>
+				<div class="stat-grid">
+					<div class="stat-row"><span class="meta-kicker">total CPU requests</span><strong th:text="${fit.reqCpu + 'm'}"></strong></div>
+					<div class="stat-row"><span class="meta-kicker">total memory requests</span><strong th:text="${fit.reqMem + 'Mi'}"></strong></div>
+					<div class="stat-row"><span class="meta-kicker">biggest node</span><strong th:text="${fit.nodeName}"></strong></div>
+					<div class="stat-row"><span class="meta-kicker">node allocatable</span><strong th:text="${fit.nodeCpu + 'm / ' + fit.nodeMem + 'Mi'}"></strong></div>
+				</div>
+				<p class="muted" th:text="${fit.note}">note</p>
+			</div>
+			<div class="card">
+				<div class="card-head">The scheduler's view (top)</div>
+				<pre class="term" th:text="${topNode}">top node</pre>
+			</div>
+			<div class="card lesson">
+				<div class="card-head">The three classes, from the video</div>
+				<ul>
+					<li><strong>BestEffort</strong> — no requests, no limits. First to be evicted, first to oversubscribe.</li>
+					<li><strong>Burstable</strong> — some value set, or requests &lt; limits. Guaranteed its request, may burst.</li>
+					<li><strong>Guaranteed</strong> — requests equal limits on CPU <em>and</em> memory. Last to evict.</li>
+				</ul>
+			</div>
+		</div>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/probes}">Next: why 'Running' isn't the same as 'ready' →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

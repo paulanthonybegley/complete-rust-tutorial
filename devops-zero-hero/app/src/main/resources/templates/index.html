@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+</head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+
+		<section class="hero">
+			<p class="kicker">DevOps from Zero to Hero · JavaScript Mastery</p>
+			<h1>DevOps isn't <span class="green">something you watch</span>, it's something you do.</h1>
+			<p class="lead">
+				The video takes every scary acronym — Git, CI/CD, Docker, Kubernetes, IaC, monitoring, security — and
+				finishes with a <strong>production API shipped end to end</strong>. This lab turns every feature it
+				raises into something you can poke, break and heal.
+			</p>
+
+			<div class="meter-row">
+				<div class="meter-label">Ship meter <span class="muted">(share of concepts that end up practised or shipped)</span></div>
+				<div class="meter">
+					<div class="meter-fill" th:style="'width:' + ${meter} + '%'" th:attr="data-value=${meter}">
+						<span th:text="${meter} + '%'">92%</span>
+					</div>
+				</div>
+				<p class="muted small" th:text="${meterNote}">note</p>
+			</div>
+		</section>
+
+		<section>
+			<h2 class="section-title">One stat per theme — all bucket into one shipped API</h2>
+			<div class="grid tiles">
+				<a class="tile" th:each="c : ${navCategories}" th:href="@{/concepts(cat=${c})}">
+					<span class="tile-count" th:text="${counts.get(c)}">0</span>
+					<span class="tile-name" th:text="${c.label}">Theme</span>
+					<span class="tile-hint">open explorer →</span>
+				</a>
+			</div>
+		</section>
+
+		<section>
+			<h2 class="section-title">Four stops on the way</h2>
+			<div class="grid cards">
+				<article class="card" th:each="p : ${featured}">
+					<div class="card-top">
+						<span class="badge" th:text="${p.category.label}">Category</span>
+						<span class="status" th:classappend="'st-' + ${#strings.toLowerCase(p.status.name())}"
+							th:text="${p.status.label}">Status</span>
+					</div>
+					<h3 th:text="${p.title}">Title</h3>
+					<p class="summary" th:text="${p.summary}">Summary</p>
+					<a class="btn" th:href="@{/concepts}">In the explorer →</a>
+				</article>
+			</div>
+		</section>
+
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

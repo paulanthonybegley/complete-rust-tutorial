@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: devops-zero-hero
+  thymeleaf:
+    cache: false
+server:
+  port: 8080

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Pods &amp; Namespaces · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 0:28:55 Making Pods</span>
+			<span class="chip">0:34:00 Namespaces</span>
+		</div>
+		<h1>Making <span class="accent">Pods</span> &amp; Namespaces</h1>
+		<p class="lead">
+			A pod is the smallest thing the scheduler reasons about. A <span class="mono">kubectl run</span> with
+			<code>--restart=Never</code> makes a <em>bare pod</em> — and bare pods do not come back when they die.
+			That detail is the whole lesson of this station.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">The console — run real commands</span>
+			<span class="step-hint">type, submit, see the cluster answer</span>
+		</div>
+
+		<form hx-post="/kubectl" hx-target="#console-out">
+			<div class="ctl">
+				<label class="tight" for="cmd">$</label>
+				<input type="text" id="cmd" name="cmd" size="46" value="kubectl get pods -A"
+					style="font-family:var(--mono)" />
+				<button class="btn" type="submit">run</button>
+			</div>
+		</form>
+
+		<div id="console-out" th:include="~{fragments :: kubectl}"></div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">Namespaces wall — the same names, different rooms</span>
+			<span class="step-hint">names isolate objects: two pods named the same can exist in different namespaces</span>
+		</div>
+		<div class="ns-board">
+			<div class="ns-box" th:each="e : ${podsByNs.entrySet()}">
+				<div class="ns-head">
+					<span th:text="${e.key}">namespace</span>
+					<span class="muted" th:text="${#lists.size(e.value)} + ' pods'">0</span>
+				</div>
+				<div class="ns-body">
+					<div class="pod" th:each="p : ${e.value}">
+						<span th:text="${p.name}">pod</span>
+						<span class="muted" th:text="${p.phase}">Running</span>
+					</div>
+					<p class="muted small" th:if="${#lists.isEmpty(e.value)}">no pods here — yet</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">3</span>
+			<span class="step-name">The ephemerality experiment</span>
+			<span class="step-hint"><span class="mono">flaky</span> is a bare pod with no ReplicaSet behind it</span>
+		</div>
+		<div class="grid3">
+			<div class="card">
+				<div class="card-head">1 — inspect</div>
+				<pre class="term" th:text="|$ kubectl get pods flaky|">get</pre>
+				<pre class="term out" th:text="${getAll}">all</pre>
+			</div>
+			<div class="card">
+				<div class="card-head">2 — kill it</div>
+				<form hx-post="/kubectl" hx-target="#console-out" style="display:contents">
+					<input type="hidden" name="cmd" value="kubectl delete pod flaky" />
+					<button class="btn danger" type="submit">kubectl delete pod flaky</button>
+				</form>
+				<p class="muted small">A bare pod <strong>stays deleted</strong>. No controller, no reconciliation.</p>
+			</div>
+			<div class="card">
+				<div class="card-head">3 — prove it</div>
+				<form hx-post="/kubectl" hx-target="#console-out" style="display:contents">
+					<input type="hidden" name="cmd" value="kubectl get pods -o wide" />
+					<button class="btn ghost" type="submit">kubectl get pods -o wide</button>
+				</form>
+				<p class="muted small">Now run <span class="mono">kubectl delete pod web-rs-77b7c6d8f9-x1</span> — the same
+					command, but that pod is owned by the <code>web</code> Deployment…</p>
+			</div>
+		</div>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/resources}">Next: what the scheduler must fit — requests & limits →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

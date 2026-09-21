@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Viewing Logs · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 1:21:16 Viewing Logs</span>
+		</div>
+		<h1>Viewing <span class="accent">Logs</span> like the video shows</h1>
+		<p class="lead">
+			<code>kubectl logs</code> streams a container's stdout/stderr. The pod <span class="mono">api-rs-a1</span>
+			runs two containers, so you learn the flags straight away: <code>-c api | -c sidecar</code>,
+			<code>--timestamps</code>, <code>-f</code> for follow, <code>--previous</code> after a crash.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">Generate some traffic, then read the stream</span>
+			<span class="step-hint">each button appends real lines to this pod's in-memory log buffer</span>
+		</div>
+
+		<form hx-post="/logs" hx-target="#log-view">
+			<input type="hidden" name="container" value="api" />
+			<div class="ctl">
+				<button class="btn" type="submit" name="action" value="healthcheck">hit /healthz twice</button>
+				<button class="btn danger" type="submit" name="action" value="crash">simulate a crash</button>
+				<button class="btn ghost" type="submit" name="action" value="rotate">rotate sidecar log</button>
+			</div>
+		</form>
+
+		<div id="log-view" th:include="~{fragments :: logLines}"></div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">The flags — one box</span>
+		</div>
+		<table class="mini">
+			<tr><th>flag</th><th>why you'll reach for it</th></tr>
+			<tr><td class="mono">kubectl logs api-rs-a1 -f</td><td>follow the stream live, like the video's demo</td></tr>
+			<tr><td class="mono">kubectl logs api-rs-a1 -c sidecar</td><td>pick a container in a multi-container pod</td></tr>
+			<tr><td class="mono">kubectl logs api-rs-a1 --timestamps</td><td>when correlated with events or metrics</td></tr>
+			<tr><td class="mono">kubectl logs api-rs-a1 --previous</td><td>see the crashed instance's output — the crash lines are still there</td></tr>
+			<tr><td class="mono">kubectl logs -l app=api</td><td>all pods matching a label selector at once</td></tr>
+		</table>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/config}">Next: ConfigMaps, volume mounting & secrets →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

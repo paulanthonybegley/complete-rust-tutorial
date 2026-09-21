@@ -1,0 +1,10 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: devops-zero-hero:0.0.1
+    container_name: devops-lab
+    ports:
+      - "8092:8080"
+    restart: unless-stopped

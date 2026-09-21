@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Probes · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 0:51:01 Probes</span>
+		</div>
+		<h1>Startup, <span class="accent">Liveness</span> &amp; Readiness probes</h1>
+		<p class="lead">
+			Three probe types, three jobs. <strong>startup</strong> protects a slow-booting container from being
+			restarted; <strong>liveness</strong> restarts a container that is <em>alive but useless</em>; and
+			<strong>readiness</strong> decides whether a <em>healthy-but-busy</em> pod should receive traffic.
+			Flip a scenario and watch the three web pods react.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">Pick a pod and a failure mode</span>
+			<span class="step-hint">the cards below update instantly via htmx</span>
+		</div>
+
+		<form hx-post="/probes" hx-target="#probe-cards">
+			<div class="ctl">
+				<select name="pod">
+					<option th:each="p : ${webPods}" th:value="${p.name}" th:text="${p.name}">pod</option>
+				</select>
+				<select name="scenario">
+					<option th:each="s : ${scenarios}" th:value="${s}" th:text="${s}">scenario</option>
+				</select>
+				<label class="tight" for="startup">startup (s)</label>
+				<input type="number" id="startup" name="startup" value="5" min="0" max="60" style="width:5rem" />
+				<label class="tight" for="path">liveness path</label>
+				<select name="path">
+					<option>/health</option>
+					<option>/healthz</option>
+					<option>/ready</option>
+					<option>/dead</option>
+				</select>
+				<label class="tight">readiness on</label>
+				<input type="checkbox" name="readiness" value="true" checked />
+				<input type="hidden" name="readiness" value="false" />
+				<button class="btn" type="submit">apply scenario</button>
+			</div>
+		</form>
+
+		<div id="probe-cards" th:include="~{fragments :: probeCards}"></div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">Which probe answers which question?</span>
+		</div>
+		<table class="mini">
+			<tr><th>probe</th><th>question it answers</th><th>action on failure</th></tr>
+			<tr><td class="fw">startup</td><td>"has the process finished booting?"</td><td>keeps liveness/readiness paused</td></tr>
+			<tr><td class="fw">liveness</td><td>"is the container still alive?"</td><td>kubelet kills &amp; restarts the container</td></tr>
+			<tr><td class="fw">readiness</td><td>"is it safe to send this pod traffic?"</td><td>removes the pod from Service endpoints</td></tr>
+		</table>
+		<p class="muted">Notice the difference in the <strong>Restarts</strong> column: a liveness failure bumps the
+			restart counter and the phase flips to <span class="mono">CrashLoopBackOff</span>; a readiness failure
+			leaves the phase green but marks Ready <span class="mono">false</span>.</p>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/exec}">Next: get inside a running container →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

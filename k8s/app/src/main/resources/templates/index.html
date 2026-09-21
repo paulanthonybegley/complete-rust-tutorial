@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero">
+		<p class="kicker">from the video · Kubernetes Zero to Hero · Alta3 Research</p>
+		<h1>Kubernetes isn't something you <span class="accent">read</span>, it's something you <span class="blue">apply</span>.</h1>
+		<p class="lead">
+			This lab is a <strong>simulated cluster</strong> that answers a real <span class="mono">kubectl</span>.
+			You declare a manifest, run the command, break things, heal things — and feel the 25 chapters
+			of the two-hour video on your own machine, safely, with no cluster, nodes, or cloud account.
+		</p>
+
+		<div class="meter-row">
+			<div class="meter-label">Your path to hero — stations visited</div>
+			<div class="meter">
+				<div class="meter-fill" th:style="|width: ${meter * 100.0 / meterMax}%|"
+					th:text="${meter} + '/' + ${meterMax}"></div>
+			</div>
+		</div>
+	</section>
+
+	<section>
+		<h2 class="section-title">The stations</h2>
+		<div class="grid tiles">
+			<a class="tile" th:href="@{/arch}">
+				<span class="tile-count">01</span><span class="tile-name">Architecture</span>
+				<span class="tile-hint">control plane vs workers · the 8-step request trace</span>
+			</a>
+			<a class="tile" th:href="@{/manifest}">
+				<span class="tile-count">02</span><span class="tile-name">YAML · manifests</span>
+				<span class="tile-hint">edit, validate, apply — API versioning</span>
+			</a>
+			<a class="tile" th:href="@{/pods}">
+				<span class="tile-count">03</span><span class="tile-name">Pods</span>
+				<span class="tile-hint">make them, watch them die, namespaces</span>
+			</a>
+			<a class="tile" th:href="@{/resources}">
+				<span class="tile-count">04</span><span class="tile-name">Requests & Limits</span>
+				<span class="tile-hint">QoS classes, throttling, OOM, node fit</span>
+			</a>
+			<a class="tile" th:href="@{/probes}">
+				<span class="tile-count">05</span><span class="tile-name">Probes</span>
+				<span class="tile-hint">startup · liveness · readiness on live pods</span>
+			</a>
+			<a class="tile" th:href="@{/exec}">
+				<span class="tile-count">06</span><span class="tile-name">exec & cp</span>
+				<span class="tile-hint">get inside a container, move files around</span>
+			</a>
+			<a class="tile" th:href="@{/logs}">
+				<span class="tile-count">07</span><span class="tile-name">Logs</span>
+				<span class="tile-hint">-f · --timestamps · multiple containers</span>
+			</a>
+			<a class="tile" th:href="@{/config}">
+				<span class="tile-count">08</span><span class="tile-name">ConfigMaps · Secrets</span>
+				<span class="tile-hint">env vs volume, base64 & the storage lie</span>
+			</a>
+			<a class="tile" th:href="@{/deploys}">
+				<span class="tile-count">09</span><span class="tile-name">Deployments</span>
+				<span class="tile-hint">scale, rolling update, undo, self-heal, labels</span>
+			</a>
+			<a class="tile" th:href="@{/storage}">
+				<span class="tile-count">10</span><span class="tile-name">Storage</span>
+				<span class="tile-hint">PV, PVC, workspaces — data that survives</span>
+			</a>
+			<a class="tile" th:href="@{/services}">
+				<span class="tile-count">11</span><span class="tile-name">Services</span>
+				<span class="tile-hint">ClusterIP · NodePort · LoadBalancer · port diagram</span>
+			</a>
+			<a class="tile" th:href="@{/netpol}">
+				<span class="tile-count">12</span><span class="tile-name">Network Policies</span>
+				<span class="tile-hint">build a policy, watch the traffic matrix</span>
+			</a>
+		</div>
+	</section>
+
+	<section>
+		<h2 class="section-title">Step inside right away</h2>
+		<div class="grid3">
+			<div class="card">
+				<div class="card-head">The one command that proves it</div>
+				<pre class="term" th:text="|$ kubectl get pods|"></pre>
+				<pre class="term out" th:text="${getPods}">get pods</pre>
+				<p class="muted small">This isn't canned text — run anything in the console tab and the cluster answers back.</p>
+			</div>
+			<div class="card">
+				<div class="card-head">Cluster pulse</div>
+				<div class="stat-grid">
+					<div class="stat-row"><span class="meta-kicker">running pods</span><strong class="big-stat" th:text="${totalPods}">0</strong></div>
+					<div class="stat-row"><span class="meta-kicker">deployments ready</span>
+						<strong class="big-stat" th:class="${deployReady ? 'ok-line' : 'bad-line'}" th:text="${deployReady ? 'all' : 'failing'}"></strong></div>
+					<div class="stat-row"><span class="meta-kicker">namespaces</span><strong class="big-stat" th:text="${#lists.size(namespaces)}">3</strong></div>
+				</div>
+			</div>
+			<div class="card">
+				<div class="card-head">Why a simulator?</div>
+				<p><code>kubectl delete pod</code> on a real cluster is a production accident. Here it is a lesson:
+					kill the wrong pod and you watch a controller heal it — or, for a lone pod, watch nothing happen.</p>
+				<p class="muted">Same commands, zero blast radius.</p>
+			</div>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

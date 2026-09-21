@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>ConfigMaps, Mounts &amp; Secrets · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 1:05:34 ConfigMaps</span>
+			<span class="chip">1:09:49 Volume Mounting</span>
+			<span class="chip">1:18:05 Secrets</span>
+		</div>
+		<h1>ConfigMaps, <span class="accent">Volume Mounts</span> &amp; Secrets</h1>
+		<p class="lead">
+			Applications want configuration — and configuration wants to be decoupled from the image. Three ways to
+			hand it over: as environment variables, as a mounted volume, or (never) hard-coded. This station has one
+			real ConfigMap (<span class="mono">web-config</span>) and one Secret (<span class="mono">web-secret</span>)
+			— pick a delivery mode and watch what lands in the pod.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">The objects involved</span>
+		</div>
+		<div class="grid3">
+			<div class="card">
+				<div class="card-head">ConfigMap <span class="mono">web-config</span> (plain)</div>
+				<pre class="term out"><span th:each="e : ${configMaps[0].data.entrySet()}" th:text="${e.key + '=' + e.value}">k=v</span></pre>
+			</div>
+			<div class="card">
+				<div class="card-head">Secret <span class="mono">web-secret</span> (base64)</div>
+				<pre class="term out"><span th:each="e : ${b64.entrySet()}" th:text="${e.key + ' = ' + e.value}">k = v</span></pre>
+				<p class="muted small">Even though you write <code>stringData</code> in plaintext, the API stores
+					<span class="mono">data: { … }</span> as base64. That's <em>encoding, not encryption</em>.</p>
+			</div>
+			<div class="card">
+				<div class="card-head">Manifest it the easy way (Secret)</div>
+				<pre class="term">apiVersion: v1
+kind: Secret
+metadata:
+  name: web-secret
+stringData:
+  DB_PASSWORD: s3cr3t!</pre>
+				<p class="muted small"><code>stringData</code> is write-only sugar; read it back and it's already encoded.</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">Pick a delivery mode: env or volume</span>
+			<span class="step-hint">env == read at boot · volume == a projected filesystem that can refresh live</span>
+		</div>
+
+		<form hx-post="/config" hx-target="#config-details">
+			<div class="ctl">
+				<input type="radio" name="mount" value="env" id="m-env" th:checked="${mount == 'env'}" />
+				<label class="tight" for="m-env">env vars</label>
+				<input type="radio" name="mount" value="volume" id="m-vol" th:checked="${mount == 'volume'}" />
+				<label class="tight" for="m-vol">volume mount</label>
+				<button class="btn" type="submit">re-project the pod</button>
+			</div>
+		</form>
+
+		<div id="config-details" th:include="~{fragments :: configMount}"></div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">3</span>
+			<span class="step-name">The rotation trap</span>
+			<span class="step-hint">update a Secret's value, and…</span>
+		</div>
+		<table class="mini">
+			<tr><th></th><th>env var injection</th><th>volume mount</th></tr>
+			<tr><td class="fw">when is the pod's copy updated?</td>
+				<td>never — value baked in at pod creation</td>
+				<td>soon — kubelet refreshes the projected files (with a delay)</td></tr>
+			<tr><td class="fw">recommended for</td>
+				<td>small, static, eagerly-loaded config</td>
+				<td>larger config files; live rotation; readers that re-read files</td></tr>
+			<tr><td class="fw">gotcha</td>
+				<td>restart pods to pick up new values</td>
+				<td>apps must watch the file, not cache it forever</td></tr>
+		</table>
+		<p class="muted">Same lesson the video draws in chapter 12/13: the two mechanisms have different freshness
+			contracts, and choosing between them is a real design decision.</p>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/deploys}">Next: labels, rollouts & self-healing →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

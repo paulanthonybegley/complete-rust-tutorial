@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Ship it · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 2:41:00 NodePort Demonstration</span>
+			<span class="chip">2:45:14 Continued Training</span>
+		</div>
+		<h1><span class="accent">Ship it.</span> You've gone from zero to this.</h1>
+		<p class="lead">
+			The video ends with the whole arc in six commands: cluster up, apply the app, expose it as a NodePort,
+			hit it in a browser. This page is that ending — and the beginning of whatever the video points to next.
+			Every concept you touched is now a checkable box below what you've been doing all along: applying
+			manifests, not believing in them.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">The video's closing arc — run it in this simulator</span>
+		</div>
+		<div class="grid3">
+			<div class="card">
+				<div class="card-head">six commands that sum up the course</div>
+				<pre class="term out"><span th:each="d : ${demo}" th:text="${d}">command</span></pre>
+			</div>
+			<div class="card">
+				<div class="card-head">where the simulator stands right now</div>
+				<pre class="term" th:text="|$ kubectl get all|"></pre>
+				<pre class="term out" th:text="${getAll}">get all</pre>
+			</div>
+			<div class="card">
+				<div class="card-head">the conceptual checkboxes</div>
+				<div class="ns-body">
+					<div class="pod" th:each="c : ${concepts}">
+						<span th:text="${c}">concept</span>
+						<span class="ok-line">✓ covered</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">Where the video points you next</span>
+		</div>
+		<table class="mini">
+			<tr><th>next step</th><th>why it's next</th></tr>
+			<tr th:each="s : ${nextSteps}">
+				<td th:text="${#strings.substringBefore(s, ' — ')}">step</td>
+				<td class="muted" th:text="${#strings.substringAfter(s, ' — ')}">why</td>
+			</tr>
+		</table>
+		<div class="grid3" style="margin-top:1rem">
+			<div class="card lesson">
+				<div class="card-head">You already earned this</div>
+				<p>25 chapters of video, 12 stations, tens of commands, a live simulator that never broke anything.
+					The gap from "watched it" to "did it" is closed.</p>
+			</div>
+			<div class="card">
+				<div class="card-head">Prove it to yourself</div>
+				<div class="ctl">
+					<a class="btn" th:href="@{/quiz}">take the quiz</a>
+					<a class="btn ghost" th:href="@{/flashcards}">drill the cards</a>
+				</div>
+			</div>
+			<div class="card">
+				<div class="card-head">Keep the receipt</div>
+				<p class="muted small">Hit Home and watch the hero meter sit at <strong>12/12</strong>. That's the
+					objective record of the whole path.</p>
+				<a class="btn ghost" th:href="@{/}">back to home ↑</a>
+			</div>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

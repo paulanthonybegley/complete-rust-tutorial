@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<!-- The kubectl console output block (shared by every station that runs commands). -->
+<th:block th:fragment="kubectl">
+	<div class="term-box">
+		<div class="term-bar">
+			<span class="term-dot"></span><span class="term-dot d2"></span><span class="term-dot d3"></span>
+			<span class="term-title">kubectl — simulator namespace</span>
+		</div>
+		<pre class="term" th:text="${'$ kubectl ' + (cmd != null ? cmd : '')}" >$ kubectl</pre>
+		<pre class="term out" th:text="${output}">output</pre>
+	</div>
+</th:block>
+
+<!-- Manifest lab validate result. -->
+<th:block th:fragment="validationResult">
+	<div class="result-box ok" th:if="${#lists.isEmpty(validation)}">
+		<span class="meta-kicker">kubectl apply --dry-run=client</span>
+		<p class="ok-line">validated — the API server accepts this manifest (schema checked: apiVersion, kind, name, image, indentation).</p>
+	</div>
+	<div class="result-box bad" th:if="${!#lists.isEmpty(validation)}">
+		<span class="meta-kicker">validation failed</span>
+		<ul>
+			<li th:each="e : ${validation}" th:text="${e}">error</li>
+		</ul>
+	</div>
+</th:block>
+
+<!-- Manifest lab apply result. -->
+<th:block th:fragment="applyResult">
+	<div class="result-box ok" th:if="${applyResult != null and applyResult.startsWith('deployment') or applyResult != null and applyResult.startsWith('pod') or applyResult != null and applyResult.startsWith('service') or applyResult != null and applyResult.startsWith('configmap') or applyResult != null and applyResult.startsWith('secret') or applyResult != null and applyResult.startsWith('persistentvolumeclaim') or applyResult != null and applyResult.startsWith('networkpolicy') or applyResult != null and applyResult.startsWith('namespace')}">
+		<span class="meta-kicker">kubectl apply -f</span>
+		<pre class="term out" th:text="${applyResult}">apply result</pre>
+		<p class="muted">The object now exists in the simulated cluster — switch to a console tab and run <code>kubectl get all</code> to see it.</p>
+	</div>
+	<div class="result-box bad" th:if="${applyResult != null and applyResult.startsWith('error')}">
+		<span class="meta-kicker">apply rejected</span>
+		<pre class="term out" th:text="${applyResult}">apply error</pre>
+	</div>
+</th:block>
+
+<!-- Probe scenario cards swapped in place. -->
+<th:block th:fragment="probeCards">
+	<div class="grid3" th:if="${states != null}">
+		<div class="card" th:each="pod : ${webPods}">
+			<div class="card-head" th:text="${pod.name}">pod</div>
+			<div class="stat-row">
+				<span class="meta-kicker">phase</span>
+				<strong th:text="${states[pod.name].phase}">Running</strong>
+			</div>
+			<div class="stat-row">
+				<span class="meta-kicker">ready</span>
+				<strong th:text="${states[pod.name].ready ? 'true' : 'false'}" th:class="${states[pod.name].ready ? 'ok-line' : 'bad-line'}"></strong>
+			</div>
+			<div class="stat-row">
+				<span class="meta-kicker">restarts</span>
+				<strong th:text="${states[pod.name].restarts}">0</strong>
+			</div>
+			<p class="muted" th:text="${states[pod.name].reason}">reason</p>
+		</div>
+	</div>
+	<p class="last-event" th:if="${lastEvent != null}" th:text="${lastEvent}">event</p>
+</th:block>
+
+<!-- ConfigMaps: env vs volume mount decision. -->
+<th:block th:fragment="configMount">
+	<div class="grid3">
+		<div class="card">
+			<div class="card-head">As environment variables</div>
+			<pre class="term out" th:switch="${mount}">
+				<span th:case="'volume'" th:text="${volumeManifest}">volume</span>
+				<span th:case="*" th:text="${envManifest}">env</span>
+			</pre>
+		</div>
+		<div class="card">
+			<div class="card-head">What the pod actually sees</div>
+			<pre class="term out" th:switch="${mount}">
+				<span th:case="'volume'" th:text="${'kubectl exec api-rs-a1 -- ls -R /app/config /run/secrets' + fileSnapshot}">files</span>
+				<span th:case="*" th:text="${'kubectl exec api-rs-a1 -- env' + dataSnapshot}">env</span>
+			</pre>
+		</div>
+		<div class="card lesson">
+			<div class="card-head">Lesson</div>
+			<p>Choose <strong>env</strong> for simple, read-at-boot config; choose a <strong>volume</strong> when you need live refreshes,
+				larger config files, or file permissions pinned to the mount.</p>
+			<p class="muted"><code>stringData</code> lets you write plaintext in the manifest; the API stores it base64.
+				Notice the <code>data:</code> block below is already encoded — that is <em>encoding, not encryption</em>.</p>
+		</div>
+	</div>
+</th:block>
+
+<!-- Services: curl output from a client pod. -->
+<th:block th:fragment="curlOut">
+	<div class="result-box ok">
+		<span class="meta-kicker">kubectl exec web-rs-77b7c6d8f9-x1 -- curl -s</span>
+		<pre class="term out" th:text="${curlOut}">curl out</pre>
+	</div>
+</th:block>
+
+<!-- Logs: streaming lines container. -->
+<th:block th:fragment="logLines">
+	<pre class="term out log-stream" th:text="${'$ kubectl logs api-rs-a1 ' + (container != null and container != 'api' ? '-c ' + container : '') + ' --timestamps'}">command</pre>
+	<pre class="term out log-stream">
+<span th:each="l : ${lines}" th:if="${container == null or l.container == container}"
+	  th:text="${'[' + l.time + '] ' + l.container + '  ' + l.text}">line</span></pre>
+</th:block>
+
+<!-- NetworkPolicy builder result. -->
+<th:block th:fragment="netpolResult">
+	<div class="grid3">
+		<div class="card">
+			<div class="card-head">Ingress → target app=<span th:text="${target}">web</span></div>
+			<table class="mini">
+				<tr><th>source</th><th>verdict</th></tr>
+				<tr th:each="c : ${matrix.ingressCells}">
+					<td th:text="${c.source}">src</td>
+					<td th:text="${c.verdict}" th:class="${c.verdict == 'ALLOWED' ? 'ok-line' : 'bad-line'}"></td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(matrix.ingressCells)}">
+					<td colspan="2" class="muted">no ingress rules — selected pods now deny all ingress</td>
+				</tr>
+			</table>
+			<p class="muted" th:if="${!#lists.isEmpty(matrix.ingressCells)}" th:text="${matrix.ingressCells[0].rule}">rule</p>
+		</div>
+		<div class="card">
+			<div class="card-head">Egress ← target</div>
+			<table class="mini">
+				<tr><th>destination</th><th>verdict</th></tr>
+				<tr th:each="c : ${matrix.egressCells}">
+					<td th:text="${c.source}">dst</td>
+					<td th:text="${c.verdict}" th:class="${c.verdict == 'ALLOWED' ? 'ok-line' : 'bad-line'}"></td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(matrix.egressCells)}">
+					<td colspan="2" class="muted">no egress rules — all egress from selected pods is now denied</td>
+				</tr>
+			</table>
+			<p class="muted" th:if="${!#lists.isEmpty(matrix.egressCells)}" th:text="${matrix.egressCells[0].rule}">rule</p>
+		</div>
+		<div class="card">
+			<div class="card-head">The policy you built</div>
+			<pre class="term out" th:text="${matrix.yaml}">yaml</pre>
+		</div>
+	</div>
+</th:block>
+
+</body>
+</html>

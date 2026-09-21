@@ -1,0 +1,36 @@
+name: course
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Test the API (the course's "tests never red" rule)
+        run: mvn -B -f eighth-api-rules/app/pom.xml test
+
+      - name: Build the image
+        run: docker build -f devops-zero-hero/deploy/Dockerfile.api-rules -t api-rules:ci .
+
+      - name: Simulate the deploy stage (red = blocked, never reaches prod)
+        if: ${{ false }}
+        run: echo "push to registry + rollout would go here"
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: api-rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy gate
+        run: echo "A real pipeline would push the image and run 'kubectl rollout restart deployment/api-rules' here."

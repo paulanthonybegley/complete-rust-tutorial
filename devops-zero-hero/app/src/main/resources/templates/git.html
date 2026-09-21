@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Lab · Version control</p>
+			<h1>History is a time machine.</h1>
+			<p class="lead">
+				Every change is a commit, work happens on branches, and <code>git revert</code> is the escape hatch.
+				Switch the graph to the <em>feature/login</em> branch and see the divergence.
+			</p>
+
+			<form class="ctl" hx-get="/git/graph" hx-target="#graph" hx-swap="innerHTML">
+				<label>Show
+					<select name="branch">
+						<option value="main" th:selected="${branch == 'main'}">main</option>
+						<option value="feature/login" th:selected="${branch == 'feature/login'}">feature/login</option>
+					</select>
+				</label>
+				<button class="btn" type="submit">Switch branch</button>
+			</form>
+		</section>
+
+		<section id="graph" th:insert="~{_fragments :: gitGraph}"></section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

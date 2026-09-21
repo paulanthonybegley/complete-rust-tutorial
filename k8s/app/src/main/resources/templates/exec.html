@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>exec &amp; cp · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 0:58:20 kubectl exec &amp; cp</span>
+		</div>
+		<h1>Inside the black box: <span class="accent">kubectl exec</span> &amp; cp</h1>
+		<p class="lead">
+			Sometimes you must get <em>into</em> the container — read a config file, inspect env, copy a file in for
+			debugging. The video shows the mental model: <code>exec</code> runs one process inside the container;
+			<code>cp</code> shuffles files between your machine and the pod's filesystem. Both, here, are simulated
+			but honest: this pod's virtual filesystem is real inside this app.
+		</p>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">exec — run a command in the api pod</span>
+			<span class="step-hint">the pod <span class="mono" th:text="${apiPod.name}">api-rs-a1</span> has two containers:</span>
+		</div>
+
+		<form method="post" th:action="@{/exec}">
+			<div class="ctl">
+				<label class="tight" for="cmd">$ kubectl exec api-rs-a1 --</label>
+				<input type="text" id="cmd" name="cmd" size="40" value="ls /app" style="font-family:monospace" />
+				<input type="hidden" name="action" value="exec" />
+				<button class="btn" type="submit">run</button>
+			</div>
+		</form>
+
+		<div class="grid3">
+			<div class="card">
+				<div class="card-head">Try these on your own</div>
+				<ul>
+					<li th:each="s : ${samples}" class="mono small" th:text="${s}">sample</li>
+				</ul>
+				<p class="muted small">Two containers share this pod: <span class="mono">api</span> and <span class="mono">sidecar</span>.
+					<code>exec</code> targets the first container by default.</p>
+			</div>
+			<div class="card">
+				<div class="card-head">persistent answer</div>
+				<pre class="term out" th:text="${lastEvent}">last event</pre>
+			</div>
+			<div class="card">
+				<div class="card-head">Filesystem right now</div>
+				<table class="mini">
+					<tr><th>path</th><th>size</th></tr>
+					<tr th:each="f : ${fs.values()}">
+						<td class="mono" th:text="${f.path}">/path</td>
+						<td th:text="${f.size}">0</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">cp — move a file from the host workspace into the pod</span>
+			<span class="step-hint">the pod's filesystem preview above updates as you copy</span>
+		</div>
+
+		<form method="post" th:action="@{/exec}">
+			<div class="ctl">
+				<select name="src">
+					<option>flag.txt</option>
+					<option>notes.txt</option>
+				</select>
+				<label class="tight" for="dst">→ api-rs-a1:</label>
+				<input type="text" id="dst" name="dst" size="24" value="/data/flag.txt" style="font-family:monospace" />
+				<input type="hidden" name="action" value="cp" />
+				<button class="btn ghost" type="submit">kubectl cp</button>
+			</div>
+		</form>
+
+		<div class="grid3">
+			<div class="card">
+				<div class="card-head">Host workspace (where kubectl runs)</div>
+				<ul>
+					<li class="mono small" th:each="e : ${workspace.entrySet()}" th:text="${e.key + '  —  ' + e.value}">file</li>
+				</ul>
+			</div>
+			<div class="card">
+				<div class="card-head">Then read it back from inside</div>
+				<form method="post" th:action="@{/exec}">
+					<div class="ctl">
+						<label class="tight" for="read">read</label>
+						<input type="text" id="read" name="src" size="30" value="/data/flag.txt" style="font-family:monospace" />
+						<input type="hidden" name="action" value="cat" />
+						<button class="btn" type="submit">cat</button>
+					</div>
+				</form>
+				<p class="muted small">Files written under <code>/data/persistent/</code> even survive a pod restart —
+					that threads forward to the Storage station.</p>
+			</div>
+			<div class="card lesson">
+				<div class="card-head">Best practice from the video</div>
+				<p><code>exec</code>/<code>cp</code> are for <em>debugging</em>, not solutioning: a fix you apply by
+					hand evaporates the moment the pod dies. Treat containers as cattle; write the fix into the
+					manifest or image instead.</p>
+			</div>
+		</div>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/logs}">Next: watch the containers talk — logs →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

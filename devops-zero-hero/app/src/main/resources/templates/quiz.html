@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Self-grading quiz</p>
+			<h1>Check your understanding.</h1>
+			<p class="lead">
+				Twelve questions, one per idea the video walks through. Answer in place — every card grades itself and
+				explains the concept.
+			</p>
+		</section>
+
+		<section th:insert="~{_fragments :: quizGrid}"></section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

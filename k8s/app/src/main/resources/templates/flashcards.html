@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Flashcards · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<h1>Drill deck — <span class="accent">32 cards</span></h1>
+		<p class="lead">
+			Term on the front, definition on the back. Click a card to flip it. Shuffle yourself: any order, any
+			deck size — these are the vocabulary the video assumes you'll keep.
+		</p>
+	</section>
+
+	<div class="fc-grid">
+		<div class="fc" th:each="c, i : ${deck}">
+			<input type="checkbox" th:id="|fc-${i.index}|" class="fc-toggle" />
+			<div class="fc-inner">
+				<div class="fc-front">
+					<label th:for="|fc-${i.index}|">
+						<span class="meta-kicker" th:text="${i.index + 1}">1</span>
+						<span th:text="${c.front}">term</span>
+					</label>
+				</div>
+				<div class="fc-back">
+					<label th:for="|fc-${i.index}|">
+						<span class="meta-kicker">answer</span>
+						<span th:text="${c.back}">definition</span>
+					</label>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<section style="margin-top:2rem">
+		<div class="card">
+			<div class="card-head">How to actually use this</div>
+			<p class="muted">Read the term, recite the definition <em>before</em> flipping. Sort into "known in
+				under a second" and "not yet" — the second pile is your next 15 minutes. Come back tomorrow; the
+				video's <code>Continued Training</code> is only as far away as a card you can't yet lose.</p>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

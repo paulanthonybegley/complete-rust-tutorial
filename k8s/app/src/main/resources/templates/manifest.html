@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Manifests &amp; YAML · Kubernetes Zero→Hero</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<div class="chapter">
+			<span class="chip">video 0:21:02 YAML</span>
+			<span class="chip">0:24:52 Manifests</span>
+			<span class="chip">0:38:58 API versioning</span>
+		</div>
+		<h1>YAML, <span class="accent">Manifests</span> &amp; API versions</h1>
+		<p class="lead">
+			A manifest is a declaration of desired state. It must satisfy three tiny rules before the API server
+			accepts it: a valid <span class="mono">apiVersion</span>, a known <span class="mono">kind</span>, and
+			clean 2-space indentation. Break any of them — or use a <em>deprecated</em> version, like
+			<span class="mono">apps/v1beta1</span> — and apply fails in exactly the way it does here.
+		</p>
+	</section>
+
+	<div class="ctl">
+		<span class="kicker">preset manifest:</span>
+		<a class="chip" th:each="name : ${presets}" th:text="${name}" th:classappend="${name == preset ? ' on' : ''}"
+		   th:href="@{/manifest(p=${name})}">preset</a>
+	</div>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">1</span>
+			<span class="step-name">Edit the manifest</span>
+			<span class="step-hint">you are the API server's reviewer — what would you reject?</span>
+		</div>
+		<div class="grid3">
+			<div>
+				<form method="get" th:action="@{/manifest}">
+					<input type="hidden" name="p" th:value="${preset}" />
+					<textarea name="manifest" th:text="${manifest}">manifest</textarea>
+					<div class="ctl" style="margin-top:.6rem">
+						<button class="btn" type="submit" name="json" value="true">toggle JSON preview</button>
+					</div>
+				</form>
+			</div>
+			<div>
+				<h3 style="margin-top:.2rem">Transcript — the same document as JSON</h3>
+				<pre class="term" th:text="${json}" th:if="${json != null}">json view</pre>
+				<pre class="term" th:if="${json == null}">Pick 'toggle JSON preview' to see how YAML and JSON are the same tree.</pre>
+				<div class="card" style="margin-top:1rem">
+					<div class="card-head">Immediate pitfalls to try</div>
+					<ul>
+						<li>Delete <span class="mono">metadata.name:</span> — the schema rejects it.</li>
+						<li>Change two spaces to one — the indentation check flags it by line number.</li>
+						<li>Set <span class="mono">apiVersion: apps/v1beta1</span> — reintroduced old API, rejected.</li>
+					</ul>
+				</div>
+			</div>
+			<div class="card lesson">
+				<div class="card-head">API versioning rule of thumb</div>
+				<ul>
+					<li><span class="mono">v1</span> — core objects (Pod, Service, ConfigMap, Secret…) stable forever.</li>
+					<li><span class="mono">apps/v1</span> — Deployment &amp; ReplicaSet stable since 1.9.</li>
+					<li><span class="mono">networking.k8s.io/v1</span> — NetworkPolicy in its stable group.</li>
+					<li><span class="mono">v1beta1</span> entries are <em>deprecated &amp; removed</em> — check
+						<span class="mono">kubectl api-versions</span> to learn what this cluster actually serves.</li>
+				</ul>
+			</div>
+		</div>
+	</section>
+
+	<section class="lab-step">
+		<div class="step-head">
+			<span class="step-num">2</span>
+			<span class="step-name">Validate, then apply</span>
+			<span class="step-hint">dry-run first — the API server checks schema; apply mutates this simulator</span>
+		</div>
+
+		<form id="manifest-form" hx-post="/manifest" hx-target="#manifest-result" data-hx-form="x">
+			<input type="hidden" name="manifest" th:value="${manifest}" id="manifest-payload" />
+			<div class="ctl">
+				<button class="btn ghost" type="submit" name="action" value="validate">validate (dry-run)</button>
+				<button class="btn" type="submit" name="action" value="apply">apply -f</button>
+			</div>
+		</form>
+
+		<div id="manifest-result"></div>
+		<script>
+			(function () {
+				var src = document.querySelector('textarea[name="manifest"]');
+				var hidden = document.getElementById('manifest-payload');
+				if (src && hidden) {
+					src.addEventListener('input', function () {
+						hidden.value = src.value;
+					});
+				}
+			})();
+		</script>
+	</section>
+
+	<section>
+		<h2 class="section-title">Verify from the console</h2>
+		<div class="term-box">
+			<div class="term-bar"><span class="term-dot"></span><span class="term-dot d2"></span><span class="term-dot d3"></span><span class="term-title">kubectl</span></div>
+			<pre class="term" th:text="|$ kubectl get configmaps -A|">command</pre>
+		</div>
+		<div class="ctl">
+			<a class="btn ghost" th:href="@{/pods}">Next: apply it live, watch a pod come up →</a>
+		</div>
+	</section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+# ============================================================================
+#  Ship the api-rules API — multi-stage build matching the video's chapter
+#  "Dockerize the API": a JRE image, a non-root user, and a real healthcheck.
+#
+#  Build context is the repository ROOT so the container mirrors how the CI
+#  pipeline will build it from a shared monorepo checkout:
+#
+#    docker build -f devops-zero-hero/deploy/Dockerfile.api-rules -t api-rules .
+# ============================================================================
+
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /build
+COPY eighth-api-rules/app/pom.xml .
+RUN mvn -q -B dependency:go-offline
+COPY eighth-api-rules/app/src ./src
+RUN mvn -q -B package -DskipTests
+
+FROM eclipse-temurin:17-jre
+RUN groupadd -r app && useradd -r -g app app
+WORKDIR /workspace
+COPY --from=build /build/target/api-rules-0.0.1-SNAPSHOT.jar app.jar
+USER app
+EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
+  CMD wget -qO- http://localhost:8080/products | grep -q '"content"' || exit 1
+ENTRYPOINT ["java", "-jar", "app.jar"]

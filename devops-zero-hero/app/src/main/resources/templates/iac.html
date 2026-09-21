@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+	<th:block th:insert="~{layout :: topbar}"></th:block>
+
+	<main class="wrap">
+		<section class="hero tight">
+			<p class="kicker">Lab · Infrastructure as Code</p>
+			<h1>Plan first, apply after, review like a PR.</h1>
+			<p class="lead">
+				Terraform never touches your cloud without showing the diff. Change the desired state, plan it, apply
+				it — or destroy the lot and rebuild it tomorrow.
+			</p>
+
+			<form class="ctl" hx-get="/iac/run" hx-target="#plan" hx-swap="innerHTML">
+				<label>Command
+					<select name="mode">
+						<option value="plan" th:selected="${mode == 'plan'}">terraform plan</option>
+						<option value="apply" th:selected="${mode == 'apply'}">terraform apply</option>
+						<option value="destroy" th:selected="${mode == 'destroy'}">terraform destroy</option>
+					</select>
+				</label>
+				<label>Change to the desired state
+					<select name="change">
+						<option value="none" th:selected="${change == 'none'}">nothing — no-op</option>
+						<option value="db" th:selected="${change == 'db'}">add a Postgres cluster</option>
+						<option value="scale" th:selected="${change == 'scale'}">scale node group to 4</option>
+					</select>
+				</label>
+				<button class="btn" type="submit">Run</button>
+			</form>
+		</section>
+
+		<section id="plan" th:insert="~{_fragments :: terraformPlan}"></section>
+	</main>
+
+	<th:block th:insert="~{layout :: footer}"></th:block>
+</body>
+
+</html>

@@ -1,0 +1,68 @@
+# api-rules — the deployment a "zero-to-hero" student should recognize:
+# a Deployment (desired state = 3 replicas), a service, and the self-heal
+# loop the course lab simulates. The dashboard shows this exact picture.
+#
+# Apply with:  kubectl apply -f devops-zero-hero/deploy/k8s/api-rules.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-rules
+  labels:
+    app: api-rules
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-rules
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: api-rules
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: api-rules
+          image: ghcr.io/your-org/api-rules:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+          readinessProbe:
+            httpGet:
+              path: /products
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /products
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-rules
+spec:
+  selector:
+    app: api-rules
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
