@@ -35,6 +35,8 @@ public class Over1mController {
 	public String index(HttpSession session, Model model) {
 		model.addAttribute("stations", STATIONS);
 		model.addAttribute("done", done(session));
+		model.addAttribute("meter", done(session));
+		model.addAttribute("meterMax", STATIONS.size());
 		return "index";
 	}
 
