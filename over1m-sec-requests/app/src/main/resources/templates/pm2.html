@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Station 2 · PM2</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<p class="kicker">station 2 — pm2, more processes, same code, same box</p>
+		<h1>Four node processes share one <span class="accent">socket</span></h1>
+		<p class="lead">The app.js does not change; the process count does. Watch 8k → 24k → 42k RPS.</p>
+	</section>
+
+	<section class="arc" th:each="s : ${steps}">
+		<div class="arc-step">
+			<div class="meta-kicker" th:text="${s.instances + ' instances'}">4</div>
+			<strong th:text="${s.rps}">0</strong> <span class="muted">rps</span>
+			<p class="muted" th:text="${s.note}">note</p>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

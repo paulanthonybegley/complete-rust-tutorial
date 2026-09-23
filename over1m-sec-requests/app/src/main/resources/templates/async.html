@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Station 6 · Async</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<p class="kicker">station 6 — the request stops waiting on the write</p>
+		<h1><span class="accent">202 Accepted</span> first, drain later</h1>
+		<p class="lead">Async write: return 202, Kafka + worker drains the queue; the box keeps ~35k RPS steady.</p>
+	</section>
+
+	<section class="arc" th:each="s : ${steps}">
+		<div class="arc-step">
+			<div class="meta-kicker" th:text="${s.mechanism}">kafka</div>
+			<strong th:text="${s.rps}">0</strong> <span class="muted">rps</span>
+			<div class="stat-row">returns <span th:text="${s.returns}">202</span></div>
+			<p class="muted" th:text="${s.note}">note</p>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

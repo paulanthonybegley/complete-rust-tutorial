@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Station 3 · NIC</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<p class="kicker">station 3 — the NIC, not the CPU</p>
+		<h1>6 GB/s is the real, <span class="accent">scary ceiling</span></h1>
+		<p class="lead">The NIC counts bytes, not requests. Payload is where the video's ~100k RPS collapses.</p>
+	</section>
+
+	<section class="arc" th:each="s : ${steps}">
+		<div class="arc-step">
+			<div class="meta-kicker" th:text="${s.payload}">30 KB</div>
+			<strong th:text="${s.rps}">0</strong> <span class="muted">rps</span>
+			<div class="stat-row">bytes <span th:text="${s.bytes}">0</span></div>
+			<p class="muted" th:text="${s.note}">note</p>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

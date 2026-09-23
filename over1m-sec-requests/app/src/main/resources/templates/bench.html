@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Station 1 · Bench</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<p class="kicker">station 1 — the frame race, warm, on one box</p>
+		<h1>Node, Express, <span class="accent">Fastify</span>, Cpeak</h1>
+		<p class="lead">Same box, same autocannon flags, four frameworks. Watch Node climb from ~19k to ~73k RPS.</p>
+	</section>
+
+	<section class="grid">
+		<div class="card" th:each="fw : ${frameworks}">
+			<div class="card-head" th:text="${fw.name}">framework</div>
+			<div class="stat-row">rps <strong class="big-stat" th:text="${fw.rps}">0</strong></div>
+			<p class="muted" th:text="${fw.note}">note</p>
+			<pre class="term" th:text="${fw.dockerBuild}">docker build</pre>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

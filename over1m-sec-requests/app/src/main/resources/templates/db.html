@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Station 4 · DB</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<p class="kicker">station 4 — Postgres IOPS buy you writes/s, and money</p>
+		<h1>The DB is where <span class="accent">IOPS</span> meet the bill</h1>
+		<p class="lead">gp3 → io2: IOPS knob, writes/s climb, and the monthly cost is the second wall.</p>
+	</section>
+
+	<section class="arc" th:each="s : ${steps}">
+		<div class="arc-step">
+			<div class="meta-kicker" th:text="${s.setting}">gp3</div>
+			<strong th:text="${s.writesPerSec}">0</strong> <span class="muted">writes/s</span>
+			<div class="stat-row">iops <span th:text="${s.iops}">0</span></div>
+			<div class="stat-row">monthly <span th:text="${s.monthlyCost}">0</span></div>
+			<p class="muted" th:text="${s.note}">note</p>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

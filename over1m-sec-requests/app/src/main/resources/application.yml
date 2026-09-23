@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: over1m-sec-requests
+  thymeleaf:
+    cache: false
+server:
+  port: 8080

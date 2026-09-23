@@ -171,6 +171,8 @@ test:
 	+mvn -B -f $(DEVOPS_APP)/app/pom.xml test
 	@echo "==> Testing k8s simulator (kubectl lab, no Docker needed)"
 	+mvn -B -f $(K8S_APP)/app/pom.xml test
+	@echo "==> Testing over1m-sec-requests"
+	+mvn -B -f $(OVER1M_APP)/app/pom.xml test
 	@echo "==> Testing america-debt-crisis-world (seed + model + notebook smoke tests, no Docker needed)"
 	+if [ -x $(DEBT_APP)/.venv/bin/pytest ]; then \
 	  cd $(DEBT_APP) && .venv/bin/pytest -q; \
@@ -337,3 +339,21 @@ help:
 	@echo "  Ports (override with e.g. 'make start PORT_RULES=9090'):"
 	@echo "    api-rules :$(PORT_RULES)   db-laws :$(PORT_DBLAWS)   analytics :$(PORT_ANALYTICS)   postgres :5432"
 	@echo "    eu-independence :$(PORT_EU)   devops-zero-hero :$(PORT_DEVOPS)   k8s-simulator :$(PORT_K8S)   (standalone)"
+
+# ---------------------------------------------------------------------------
+# over1m-sec-requests — 1M-RPS course (mirrors k8s conventions, no Docker)
+# ---------------------------------------------------------------------------
+OVER1M_APP  := over1m-sec-requests
+PORT_OVER1M  ?= 8094
+
+.PHONY: start-over1m stop-over1m
+
+start-over1m:
+	@$(call start_spring_app,$(OVER1M_APP),$(PORT_OVER1M))
+
+stop-over1m:
+	@$(call stop_spring_app,$(OVER1M_APP),$(PORT_OVER1M))
+
+test-over1m:
+	@echo "==> Testing over1m-sec-requests (1M-RPS arc simulator, no Docker needed)"
+	+mvn -B -f $(OVER1M_APP)/app/pom.xml test

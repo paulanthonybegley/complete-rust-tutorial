@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>One Million RPS</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero">
+		<p class="kicker">from the 2024 video · Let's Handle One Million Requests per Second</p>
+		<h1>One million is <span class="accent">not the framework's</span> job. It never was.</h1>
+		<p class="lead">
+			Eight stations, measured on one 12-core box. Every number here came off a real
+			<code>autocannon</code> run in the video — your job is to walk the same boxes and
+			feel which wall each station hits.
+		</p>
+
+		<div class="meter-row">
+			<div class="meter-label">Your path to one million — stations visited</div>
+			<div class="meter">
+				<div class="meter-fill" th:style="|width: ${meter * 100.0 / meterMax}%|"
+					th:text="${meter} + '/' + ${meterMax}">0/8</div>
+			</div>
+		</div>
+	</section>
+
+	<section>
+		<h2 class="section-title">The stations</h2>
+		<div class="grid tiles">
+			<a class="tile" th:each="s : ${stations}">
+				<span class="tile-count" th:text="${s.station}">01</span><span class="tile-name" th:text="${s.name}">Station</span>
+				<span class="tile-hint" th:text="${s.hint}">hint</span>
+			</a>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Station 7 · Cluster</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<p class="kicker">station 7 — Redis cluster, 1M finally clears</p>
+		<h1>Shard the keys: <span class="accent">1M crosses here</span></h1>
+		<p class="lead">One node → thirty; reads scale linearly until the NIC of each node becomes the wall.</p>
+	</section>
+
+	<section class="arc" th:each="s : ${steps}">
+		<div class="arc-step">
+			<div class="meta-kicker" th:text="${s.nodes + ' nodes'}">4</div>
+			<strong th:text="${s.rps}">0</strong> <span class="muted">rps</span>
+			<p class="muted" th:text="${s.note}">note</p>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

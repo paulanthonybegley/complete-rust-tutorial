@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Station 5 · Cache</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<p class="kicker">station 5 — Redis moves reads off the DB path</p>
+		<h1>Warm reads skip <span class="accent">Postgres</span> entirely</h1>
+		<p class="lead">Request → Redis GET/SET: DB load drops to a tiny miss-rate %.</p>
+	</section>
+
+	<section class="arc" th:each="s : ${steps}">
+		<div class="arc-step">
+			<div class="meta-kicker" th:text="${s.path}">/todos</div>
+			<strong th:text="${s.rps}">0</strong> <span class="muted">rps</span>
+			<div class="stat-row">db load <span th:text="${s.dbLoadPct + '%'}">0</span></div>
+			<p class="muted" th:text="${s.note}">note</p>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>

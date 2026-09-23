@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="head">
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title th:text="${pageTitle != null ? pageTitle + ' · over1m/sec' : 'Let''s Handle One Million Requests per Second'}">Let's Handle One Million Requests per Second</title>
+	<link rel="icon" href="data:," />
+	<link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css" />
+	<script th:src="@{/js/htmx.min.js}" src="/js/htmx.min.js" defer></script>
+</head>
+
+<body>
+
+<th:block th:fragment="topbar">
+	<header class="topbar">
+		<a class="brand" th:href="@{/}">
+			<span class="brand-star">⚡</span> One Million <em>RPS</em>
+		</a>
+		<nav class="nav">
+			<a th:href="@{/}">Home</a>
+			<a th:href="@{/bench}">Bench</a>
+			<a th:href="@{/pm2}">PM2</a>
+			<a th:href="@{/nic}">NIC</a>
+			<a th:href="@{/db}">DB</a>
+			<a th:href="@{/cache}">Cache</a>
+			<a th:href="@{/async}">Async</a>
+			<a th:href="@{/cluster}">Cluster</a>
+			<a th:href="@{/uuids}">UUIDs</a>
+		</nav>
+	</header>
+</th:block>
+
+<th:block th:fragment="footer">
+	<footer class="footer">
+		<p>
+			One Million Requests per Second — an interactive course built around the 2024 video
+			<a href="https://www.youtube.com/watch?v=K0_9RVL6Cc0" target="_blank" rel="noopener">“Let's Handle One Million Requests per Second,
+				It's Scarier Than You Think!”</a>
+		</p>
+		<p class="muted">Built on the OLD.jpg framework: <em>“A lesson plan is a system, not a prompt.”</em> ©
+			<span th:text="${currentYear}">2026</span></p>
+	</footer>
+</th:block>
+
+</body>
+</html>

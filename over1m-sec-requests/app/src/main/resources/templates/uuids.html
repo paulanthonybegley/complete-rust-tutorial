@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" th:xmlns="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}">
+	<title>Station 8 · UUIDs</title>
+</head>
+
+<body>
+
+<header th:replace="~{layout :: topbar}"></header>
+
+<main class="wrap">
+
+	<section class="hero tight">
+		<p class="kicker">station 8 — the birthday paradox that makes it safe</p>
+		<h1>Why 122 bits is <span class="accent">enough</span> for the shards</h1>
+		<p class="lead">UUID-v4 entropy: at 1M uuids/s, collisions need the universe's lifetime to matter.</p>
+	</section>
+
+	<section class="arc" th:each="s : ${steps}">
+		<div class="arc-step">
+			<div class="meta-kicker" th:text="${s.uuidsPerSec}">1M</div>
+			<strong th:text="${s.collisions}">0</strong> <span class="muted">collisions</span>
+			<p class="muted" th:text="${s.note}">note</p>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+
+</body>
+</html>
