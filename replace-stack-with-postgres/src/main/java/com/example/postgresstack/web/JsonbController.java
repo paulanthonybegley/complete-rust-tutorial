@@ -1,5 +1,6 @@
 package com.example.postgresstack.web;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Controller;
@@ -30,7 +31,9 @@ public class JsonbController {
 
     @GetMapping("/jsonb")
     public String page(Model model) {
-        model.addAttribute("products", search("", "text"));
+        SearchOutcome out = run("", "text");
+        model.addAttribute("products", out.products());
+        model.addAttribute("notice", out.notice());
         model.addAttribute("requested", "");
         model.addAttribute("mode", "text");
         model.addAttribute("indexes", listIndexes());
@@ -41,7 +44,9 @@ public class JsonbController {
     public String search(@RequestParam(defaultValue = "") String q,
                          @RequestParam(defaultValue = "text") String mode,
                          Model model) {
-        model.addAttribute("products", search(q, mode));
+        SearchOutcome out = run(q, mode);
+        model.addAttribute("products", out.products());
+        model.addAttribute("notice", out.notice());
         model.addAttribute("requested", q);
         model.addAttribute("mode", mode);
         return "partials/jsonb :: products";
@@ -66,8 +71,28 @@ public class JsonbController {
         } catch (Exception e) {
             model.addAttribute("error", "Insert failed: " + e.getMessage());
         }
-        model.addAttribute("products", search("", "text"));
+        model.addAttribute("products", run("", "text").products());
         return "partials/jsonb :: products";
+    }
+
+    public record SearchOutcome(List<Product> products, String notice) {}
+
+    private SearchOutcome run(String q, String mode) {
+        if (q != null && !q.isBlank() && !mode.equals("text")) {
+            try {
+                return new SearchOutcome(search(q, mode), null);
+            } catch (DataAccessException e) {
+                return new SearchOutcome(List.of(), warning(q, mode));
+            }
+        }
+        return new SearchOutcome(search(q, mode), null);
+    }
+
+    private String warning(String q, String mode) {
+        String what = mode.equals("json") ? "JSON" : "JSONPath";
+        return "Couldn't parse \"" + q + "\" as " + what + " yet. "
+            + "Keep typing until it's valid — JSON needs balanced braces like {\"os\":\"Android\"}, "
+            + "JSONPath needs its $ anchor, e.g. $.specs.ports[*] ? (@ == \"HDMI\") — then the next keystroke will search.";
     }
 
     private List<Product> search(String q, String mode) {
@@ -78,7 +103,7 @@ public class JsonbController {
             WHERE (:q = '') OR
                   (CASE :mode
                      WHEN 'json' THEN attributes @> CAST(:q AS jsonb)
-                     WHEN 'path' THEN attributes @? CAST(:q AS jsonpath)
+                     WHEN 'path' THEN jsonb_path_exists(attributes, CAST(:q AS jsonpath))
                      ELSE name ILIKE '%'||:q||'%' OR category ILIKE '%'||:q||'%' OR attributes::text ILIKE '%'||:q||'%'
                    END)
             ORDER BY id DESC

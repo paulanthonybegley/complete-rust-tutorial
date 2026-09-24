@@ -261,6 +261,8 @@ GROUP BY ordered_on, product;
 
 CREATE UNIQUE INDEX idx_mv_daily_sales ON mv_daily_sales (ordered_on, product);
 
+ALTER MATERIALIZED VIEW mv_daily_sales OWNER TO demo_app;
+
 CREATE TABLE app_meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -300,22 +302,21 @@ ALTER TABLE private_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE private_notes FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY notes_select ON private_notes FOR SELECT
-  USING (owner_id = current_setting('app.current_user', true)::int);
+  USING (owner_id = current_setting('app.uid', true)::int);
 
 CREATE POLICY notes_insert ON private_notes FOR INSERT
-  WITH CHECK (owner_id = current_setting('app.current_user', true)::int);
+  WITH CHECK (owner_id = current_setting('app.uid', true)::int);
 
 CREATE POLICY notes_update ON private_notes FOR UPDATE
-  USING (owner_id = current_setting('app.current_user', true)::int);
+  USING (owner_id = current_setting('app.uid', true)::int);
 
 CREATE POLICY notes_delete ON private_notes FOR DELETE
-  USING (owner_id = current_setting('app.current_user', true)::int);
+  USING (owner_id = current_setting('app.uid', true)::int);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO demo_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO demo_app;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO demo_app;
 GRANT EXECUTE ON ALL PROCEDURES IN SCHEMA public TO demo_app;
-GRANT EXECUTE ON FUNCTION public.text_embedding(text) TO demo_app;
 
 ANALYZE products;
 ANALYZE jobs;

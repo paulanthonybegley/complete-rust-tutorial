@@ -42,15 +42,13 @@ public class RlsController {
                       @RequestParam(required = false) String ownerOverride,
                       Model model) {
         RlsService.AddResult result = service.addNote(user, content, ownerOverride);
-        boolean spoofed = ownerOverride != null && !ownerOverride.isBlank()
-            && Long.parseLong(ownerOverride) != user;
         model.addAttribute("users", service.users());
         model.addAttribute("uid", user);
         model.addAttribute("notes", result.notes());
-        if (spoofed) {
-            model.addAttribute("flash", "You tried to insert a row with owner_id=" + ownerOverride
-                + " while authenticated as user " + user + "."
-                + " The WITH CHECK policy rejected it: " + result.inserted() + " rows inserted.");
+        if (result.rejected()) {
+            model.addAttribute("flash", "RLS rejected the insert: you are authenticated as user " + user
+                + " but the row's owner_id did not match the WITH CHECK policy ("
+                + result.inserted() + " rows inserted).");
             model.addAttribute("spoofResult", "rejected");
         } else {
             model.addAttribute("flash", "Inserted " + result.inserted() + " row as user " + user

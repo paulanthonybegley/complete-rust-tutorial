@@ -65,7 +65,7 @@ SELECT * FROM products WHERE attributes @? '$.specs.ports[*] ? (@ == "HDMI")';</
         </form>
     </div>
 
-    <div class="card" id="product-list" th:replace="~{partials/jsonb :: products}"></div>
+    <div th:replace="~{partials/jsonb :: products}"></div>
 </main>
 
 <footer th:replace="~{layout :: footer}"></footer>

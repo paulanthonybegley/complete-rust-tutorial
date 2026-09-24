@@ -25,9 +25,12 @@ FROM articles
 WHERE search_vector @@ websearch_to_tsquery('english', :q)
 ORDER BY rank DESC;
 
--- typo-tolerant fuzzy fallback (pg_trigram, GIN gin_trgm_ops):
-SELECT title, similarity(title, :q) AS sim
-FROM articles WHERE title % :q ORDER BY sim DESC;</pre>
+-- typo-tolerant fuzzy fallback (pg_trigram, trigram word matching):
+SELECT title, word_similarity(:q, title) AS sim
+FROM articles
+WHERE word_similarity(:q, title) > 0.4
+   OR word_similarity(:q, body) > 0.4
+ORDER BY sim DESC;</pre>
     </div>
 
     <div class="card">

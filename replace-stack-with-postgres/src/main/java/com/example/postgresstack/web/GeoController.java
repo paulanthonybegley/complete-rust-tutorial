@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class GeoController {
@@ -24,15 +22,16 @@ public class GeoController {
     public record Shop(long id, String name, String chain, BigDecimal rating, BigDecimal distanceKm,
                        BigDecimal lat, BigDecimal lng) {}
 
-    private static final Map<String, String> AREAS = new LinkedHashMap<>(Map.of(
-        "soho", "POLYGON((-0.1400 51.5100, -0.1300 51.5100, -0.1300 51.5180, -0.1400 51.5180, -0.1400 51.5100))",
-        "southbank", "POLYGON((-0.1300 51.5000, -0.0900 51.5000, -0.0900 51.5080, -0.1300 51.5080, -0.1300 51.5000))",
-        "kings_cross", "POLYGON((-0.1310 51.5280, -0.1200 51.5280, -0.1200 51.5360, -0.1310 51.5360, -0.1310 51.5280))"));
+    public record Area(String name, String label, String wkt) {}
+
+    private static final List<Area> AREAS = List.of(
+        new Area("soho", "Soho", "POLYGON((-0.1400 51.5100, -0.1300 51.5100, -0.1300 51.5180, -0.1400 51.5180, -0.1400 51.5100))"),
+        new Area("southbank", "South Bank", "POLYGON((-0.1300 51.5000, -0.0900 51.5000, -0.0900 51.5080, -0.1300 51.5080, -0.1300 51.5000))"),
+        new Area("kings_cross", "King's Cross", "POLYGON((-0.1310 51.5280, -0.1200 51.5280, -0.1200 51.5360, -0.1310 51.5360, -0.1310 51.5280))"));
 
     @GetMapping("/geo")
     public String page(Model model) {
         model.addAttribute("view", near("51.5074", "-0.1278", "4", model));
-        model.addAttribute("areas", AREAS);
         return "geo";
     }
 
@@ -76,7 +75,11 @@ public class GeoController {
 
     @GetMapping("/geo/area")
     public String area(@RequestParam String area, Model model) {
-        String wkt = AREAS.getOrDefault(area, AREAS.get("soho"));
+        String wkt = AREAS.stream()
+            .filter(a -> a.name().equals(area))
+            .map(Area::wkt)
+            .findFirst()
+            .orElse(AREAS.get(0).wkt());
         List<Shop> shops = jdbc.query("""
             SELECT id, name, chain, rating,
                    ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng,

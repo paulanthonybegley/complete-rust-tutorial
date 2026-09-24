@@ -12,11 +12,10 @@ import java.util.Optional;
 public class QueueService {
 
     private final NamedParameterJdbcTemplate jdbc;
-    private final ObjectMapper mapper;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    public QueueService(NamedParameterJdbcTemplate jdbc, ObjectMapper mapper) {
+    public QueueService(NamedParameterJdbcTemplate jdbc) {
         this.jdbc = jdbc;
-        this.mapper = mapper;
     }
 
     public record Job(long id, String kind, String payload, int attempts, int maxAttempts) {}

@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
-<div th:fragment="products">
+<div th:fragment="products" class="card" id="product-list">
     <div class="flash" th:if="${flash != null}">
         <p th:text="${flash}"></p>
     </div>
     <div class="error" th:if="${error != null}">
         <p th:text="${error}"></p>
+    </div>
+    <div class="notice" th:if="${notice != null}">
+        <p th:text="${notice}">notice</p>
     </div>
     <table>
         <thead>

@@ -50,12 +50,18 @@ WHERE ST_Within(location::geometry, ST_GeomFromText(:wkt, 4326));   -- lon/lat o
         </form>
         <p class="small muted">
             Preset polygons:
-            <span th:each="entry : ${areas}">
-                <form hx-get="/geo/area" hx-target="#geo-results" style="display:inline">
-                    <input type="hidden" name="area" th:value="${entry.key}">
-                    <button class="ghost area-link" type="submit" th:text="${entry.key}">preset</button>
-                </form>
-            </span>
+            <form hx-get="/geo/area" hx-target="#geo-results" style="display:inline">
+                <input type="hidden" name="area" value="soho">
+                <button class="ghost area-link" type="submit">Soho</button>
+            </form>
+            <form hx-get="/geo/area" hx-target="#geo-results" style="display:inline">
+                <input type="hidden" name="area" value="southbank">
+                <button class="ghost area-link" type="submit">South Bank</button>
+            </form>
+            <form hx-get="/geo/area" hx-target="#geo-results" style="display:inline">
+                <input type="hidden" name="area" value="kings_cross">
+                <button class="ghost area-link" type="submit">King's Cross</button>
+            </form>
         </p>
     </div>
 

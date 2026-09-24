@@ -9,7 +9,7 @@
     <h1>Row Level Security <span class="replaces">replaces hand-written authz middleware</span></h1>
     <p class="lead">
         Policies attached straight to the <code>private_notes</code> table make Postgres the enforcement
-        point. Every request authenticates as a user by setting <code>app.current_user</code> on its
+        point. Every request authenticates as a user by setting <code>app.uid</code> on its
         transaction; the database then silently returns — and accepts — <em>only that user's rows</em>.
         A badly written query can never leak another tenant's data, because the filter happens below your
         application code.
@@ -21,17 +21,17 @@
 ALTER TABLE private_notes FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY notes_select ON private_notes FOR SELECT
-  USING (owner_id = current_setting('app.current_user', true)::int);
+  USING (owner_id = current_setting('app.uid', true)::int);
 
 CREATE POLICY notes_insert ON private_notes FOR INSERT
-  WITH CHECK (owner_id = current_setting('app.current_user', true)::int);
+  WITH CHECK (owner_id = current_setting('app.uid', true)::int);
 
 -- per request, scoped to the transaction:
-SET LOCAL app.current_user = &lt;session user id&gt;;</pre>
+SET LOCAL app.uid = &lt;session user id&gt;;</pre>
         <p class="small muted">
             The app connects as a normal, non-superuser role (<code>demo_app</code>) so RLS actually bites.
             Try the spoof box: attempt to insert a note <em>owned by another user</em>. The
-            <code>WITH CHECK</code> policy drops the row (0 inserted).
+            <code>WITH CHECK</code> policy rejects the row outright.
         </p>
     </div>
 
@@ -41,7 +41,7 @@ SET LOCAL app.current_user = &lt;session user id&gt;;</pre>
                 <label>Act as user</label>
                 <select name="user" hx-trigger="change" hx-get="/rls/notes" hx-target="#rls-notes" hx-swap="innerHTML">
                     <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.name}"
-                            th:selected="${u.id == uid ? 'selected'}"></option>
+                            th:selected="${u.id == uid ? 'selected' : ''}"></option>
                 </select>
             </div>
         </form>

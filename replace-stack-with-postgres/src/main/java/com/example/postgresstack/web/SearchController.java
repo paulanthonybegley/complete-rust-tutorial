@@ -85,13 +85,16 @@ public class SearchController {
 
     private List<Result> trigram(String q) {
         return jdbc.query("""
-            SELECT id, title, author, tag, published_at, similarity(title, :q) AS rank,
+            SELECT id, title, author, tag, published_at,
+                   greatest(word_similarity(:q, title), word_similarity(:q, body)) AS rank,
                    substring(body, 1, 180) AS snippet
             FROM articles
-            WHERE title % :q OR body % :q
-            ORDER BY similarity(title, :q) DESC
+            WHERE word_similarity(:q, title) > :min OR word_similarity(:q, body) > :min
+            ORDER BY rank DESC
             LIMIT 25
-            """, new MapSqlParameterSource("q", q), (rs, i) -> new Result(
+            """, new MapSqlParameterSource()
+            .addValue("q", q)
+            .addValue("min", 0.4), (rs, i) -> new Result(
             rs.getLong("id"),
             rs.getString("title"),
             rs.getString("author"),
@@ -104,12 +107,14 @@ public class SearchController {
     private List<Suggestion> suggestions(String q) {
         if (q.isBlank()) return List.of();
         return jdbc.query("""
-            SELECT title, author, similarity(title, :q) AS sim
+            SELECT title, author, word_similarity(:q, title) AS sim
             FROM articles
-            WHERE title % :q
+            WHERE word_similarity(:q, title) > :min
             ORDER BY sim DESC
             LIMIT 6
-            """, new MapSqlParameterSource("q", q), (rs, i) -> new Suggestion(
+            """, new MapSqlParameterSource()
+            .addValue("q", q)
+            .addValue("min", 0.4), (rs, i) -> new Suggestion(
             rs.getString("title"),
             rs.getString("author"),
             rs.getDouble("sim")));
