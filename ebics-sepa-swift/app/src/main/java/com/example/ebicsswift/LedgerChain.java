@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+@Service
+import org.springframework.stereotype.Service;
+
 public class LedgerChain {
 	private final List<Block> chain = new ArrayList<>();
 	private final List<String> tamperEvents = new ArrayList<>();
