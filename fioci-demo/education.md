@@ -13,4 +13,5 @@ Otherwise `mode: simulated`. Both shapes have identical fields, so the front
 end teaches the concept regardless of whether Docker is running.
 
 ## Read alongside
+- [linkedin-post.md](linkedin-post.md) — the same story, told for the timeline
 - [issue-fixed.md](issue-fixed.md) — every real failure in this repo and the exact log line that explained it.
