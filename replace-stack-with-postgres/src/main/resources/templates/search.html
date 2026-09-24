@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Full-text search')}"></head>
+<body>
+
+<nav th:replace="~{layout :: nav('search')}"></nav>
+
+<main>
+    <h1>Full-text search with <code>tsvector</code> + <code>pg_trigram</code> <span class="replaces">replaces Elasticsearch / Algolia</span></h1>
+    <p class="lead">
+        When you insert text into a <code>tsvector</code>, Postgres parses it, drops stop words and applies
+        linguistic stemming — "running" becomes "run". You query it with <code>tsquery</code>, rank hits with
+        <code>ts_rank</code> and highlight them with <code>ts_headline</code>. Turn on fuzzy matching and the
+        <code>pg_trigram</code> extension breaks words into three-letter chunks, so even a typo like
+        "Postgres" (two s's) still finds "PostgreSQL". No second search cluster needed.
+    </p>
+
+    <div class="card">
+        <h3>The engine behind this page</h3>
+        <pre class="sql">-- ranking + highlighting, powered by a GIN index:
+SELECT title, ts_rank(search_vector, websearch_to_tsquery('english', :q)) AS rank,
+       ts_headline('english', body, websearch_to_tsquery('english', :q),
+                   'StartSel=&lt;mark&gt;, StopSel=&lt;/mark&gt;') AS snippet
+FROM articles
+WHERE search_vector @@ websearch_to_tsquery('english', :q)
+ORDER BY rank DESC;
+
+-- typo-tolerant fuzzy fallback (pg_trigram, GIN gin_trgm_ops):
+SELECT title, similarity(title, :q) AS sim
+FROM articles WHERE title % :q ORDER BY sim DESC;</pre>
+    </div>
+
+    <div class="card">
+        <h3>Try it</h3>
+        <form hx-get="/search/results"
+              hx-target="#search-results"
+              hx-trigger="submit, input changed delay:250ms from:#q, change from:#fuzzy">
+            <div>
+                <label for="q">Query</label>
+                <input id="q" name="q" th:value="${view.q}" placeholder="e.g. postgres, jsonb, queue, tyop...">
+            </div>
+            <div>
+                <label for="fuzzy">
+                    <input id="fuzzy" type="checkbox" name="fuzzy" value="true"
+                           th:checked="${view.fuzzy}">
+                    fuzzy / typo-tolerant (pg_trigram)
+                </label>
+            </div>
+            <button class="ghost" type="submit">Search</button>
+        </form>
+    </div>
+
+    <div class="card" id="search-results" th:replace="~{partials/search :: results}"></div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

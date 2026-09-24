@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: fioci-demo
+  thymeleaf:
+    cache: false
+server:
+  port: 8080

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="products">
+    <div class="flash" th:if="${flash != null}">
+        <p th:text="${flash}"></p>
+    </div>
+    <div class="error" th:if="${error != null}">
+        <p th:text="${error}"></p>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>attributes (JSONB)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(products)}">
+            <td colspan="5" class="empty">No products match.</td>
+        </tr>
+        <tr th:each="p : ${products}">
+            <td th:text="${p.id}">1</td>
+            <td th:text="${p.name}"></td>
+            <td th:text="${p.category}"></td>
+            <td th:text="${'$' + p.price}"></td>
+            <td class="mono" th:text="${p.attributes}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="small muted" th:text="${'Showing ' + #lists.size(products) + ' rows from the products table.'}"></p>
+</div>
+</body>
+</html>

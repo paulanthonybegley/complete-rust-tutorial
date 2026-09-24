@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="results">
+    <table>
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Tag</th>
+            <th>Created</th>
+            <th>Similarity (cosine)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${docs.isEmpty()}">
+            <td colspan="5" class="empty">No documents match the current filters.</td>
+        </tr>
+        <tr th:each="d : ${docs}">
+            <td th:text="${d.title}"></td>
+            <td th:text="${d.author}"></td>
+            <td><span class="pill" th:text="${d.tag}"></span></td>
+            <td th:text="${#temporals.format(d.created, 'dd MMM yyyy')}"></td>
+            <td>
+                <span th:if="${d.similarity > 0}" class="bar">
+                    <span class="track"><span class="fill" th:style="'width:' + ${d.similarity * 100} + '%'"></span></span>
+                    <span th:text="${#numbers.formatDecimal(d.similarity, 1, 2)}">0.00</span>
+                </span>
+                <span th:if="${d.similarity <= 0}" class="muted small">recent</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="small muted" th:text="${docs.size() + ' document(s) — ranked by cosine distance from your query embedding, filtered by tag/author/date inside the same SQL.'}"></p>
+</div>
+</body>
+</html>

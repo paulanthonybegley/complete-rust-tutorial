@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="nearResults">
+    <h3 th:text="'Coffee within ' + ${maxKm} + ' km of (' + ${lat} + ', ' + ${lng} + ')'"></h3>
+    <p class="small muted" th:text="'Nearest-first via the k-NN ' + '<->' + ' operator and ST_DWithin — ' + ${total} + ' shop(s) found.'"></p>
+    <table>
+        <thead>
+        <tr>
+            <th>Shop</th>
+            <th>Chain</th>
+            <th>Rating</th>
+            <th>Distance (km)</th>
+            <th>Position</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${shops.isEmpty()}">
+            <td colspan="5" class="empty">No coffee shops in this radius. Try widening the search.</td>
+        </tr>
+        <tr th:each="s : ${shops}">
+            <td th:text="${s.name}"></td>
+            <td th:text="${s.chain == null ? '—' : s.chain}"></td>
+            <td th:text="${s.rating}"></td>
+            <td th:text="${s.distanceKm + ' km'}"></td>
+            <td class="mono small" th:text="${s.lat + ', ' + s.lng}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="areaResults">
+    <h3 th:text="'Shops inside polygon: ' + ${areaName}"></h3>
+    <p class="small muted" th:text="${total + ' shop(s) found with ST_Within.'}"></p>
+    <pre class="sql" th:text="${wkt}"></pre>
+    <table>
+        <thead>
+        <tr>
+            <th>Shop</th>
+            <th>Chain</th>
+            <th>Rating</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${shops.isEmpty()}">
+            <td colspan="3" class="empty">No shops inside this polygon.</td>
+        </tr>
+        <tr th:each="s : ${shops}">
+            <td th:text="${s.name}"></td>
+            <td th:text="${s.chain == null ? '—' : s.chain}"></td>
+            <td th:text="${s.rating}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

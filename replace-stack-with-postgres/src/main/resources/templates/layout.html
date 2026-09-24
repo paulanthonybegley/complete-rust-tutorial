@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' · Postgres replaces your stack'">Postgres replaces your stack</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://unpkg.com/htmx.org@2.0.6/dist/htmx.min.js" defer></script>
+</head>
+
+<nav th:fragment="nav(active)" class="topnav">
+    <a th:href="@{/}" class="brand" th:classappend="${active == 'home'} ? 'on'">PG stack</a>
+    <div class="links">
+        <a th:href="@{/acid}" th:classappend="${active == 'acid'} ? 'on'" title="ACID + extensibility">Extensibility</a>
+        <a th:href="@{/jsonb}" th:classappend="${active == 'jsonb'} ? 'on'">JSONB</a>
+        <a th:href="@{/queue}" th:classappend="${active == 'queue'} ? 'on'">Job queue</a>
+        <a th:href="@{/search}" th:classappend="${active == 'search'} ? 'on'">Full-text</a>
+        <a th:href="@{/vector}" th:classappend="${active == 'vector'} ? 'on'">pgvector</a>
+        <a th:href="@{/geo}" th:classappend="${active == 'geo'} ? 'on'">PostGIS</a>
+        <a th:href="@{/timeseries}" th:classappend="${active == 'timeseries'} ? 'on'">Time-series</a>
+        <a th:href="@{/analytics}" th:classappend="${active == 'analytics'} ? 'on'">Dashboards</a>
+        <a th:href="@{/rls}" th:classappend="${active == 'rls'} ? 'on'">Row-level security</a>
+        <a th:href="@{/caveats}" th:classappend="${active == 'caveats'} ? 'on'">Caveats</a>
+    </div>
+</nav>
+
+<footer th:fragment="footer" class="foot">
+    <p>Educational demo following <em>The Coding Gopher - "I replaced my entire stack with Postgres..."</em>.
+       One Postgres database replaces Mongo, Redis, RabbitMQ, Elasticsearch, a vector DB, a GIS server,
+       a time-series DB and a data warehouse.</p>
+</footer>
+</html>

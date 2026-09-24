@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('PostGIS')}"></head>
+<body>
+
+<nav th:replace="~{layout :: nav('geo')}"></nav>
+
+<main>
+    <h1>PostGIS + GiST <span class="replaces">replaces standalone GIS / geocoding services</span></h1>
+    <p class="lead">
+        PostGIS is the gold standard for spatial data. Instead of running precise great-circle math over every
+        coordinate on the planet, a <strong>GiST</strong> (Generalized Search Tree) index wraps each shape in a
+        simple bounding box; the planner discards millions of far-away points instantly and only does the heavy
+        geometry on the handful that remain. Below: 22 coffee shops around London, stored as
+        <code>geography(Point, 4326)</code> and queried with <code>ST_DWithin</code>, the <code>&lt;-&gt;</code>
+        k-NN operator and <code>ST_Within</code>.
+    </p>
+
+    <div class="card">
+        <h3>Radius + nearest-first (k-NN)</h3>
+        <pre class="sql">SELECT name, rating,
+       ST_Distance(location, ST_MakePoint(:lng, :lat)::geography) / 1000 AS distance_km
+FROM coffee_shops
+WHERE ST_DWithin(location, ST_MakePoint(:lng, :lat)::geography, :radius_meters)
+ORDER BY location &lt;-&gt; ST_MakePoint(:lng, :lat)::geography;   -- k-NN via GiST</pre>
+
+        <h3>Point-in-polygon</h3>
+        <pre class="sql">SELECT name FROM coffee_shops
+WHERE ST_Within(location::geometry, ST_GeomFromText(:wkt, 4326));   -- lon/lat order</pre>
+    </div>
+
+    <div class="card">
+        <h3>Try it</h3>
+        <form hx-get="/geo/near"
+              hx-target="#geo-results"
+              hx-trigger="submit">
+            <div>
+                <label for="lat">Latitude</label>
+                <input id="lat" name="lat" th:value="${lat}">
+            </div>
+            <div>
+                <label for="lng">Longitude</label>
+                <input id="lng" name="lng" th:value="${lng}">
+            </div>
+            <div>
+                <label for="maxKm">Radius (km)</label>
+                <input id="maxKm" name="maxKm" type="number" min="0.5" step="0.5" th:value="${maxKm}">
+            </div>
+            <button type="submit">Find coffee within radius</button>
+        </form>
+        <p class="small muted">
+            Preset polygons:
+            <span th:each="entry : ${areas}">
+                <form hx-get="/geo/area" hx-target="#geo-results" style="display:inline">
+                    <input type="hidden" name="area" th:value="${entry.key}">
+                    <button class="ghost area-link" type="submit" th:text="${entry.key}">preset</button>
+                </form>
+            </span>
+        </p>
+    </div>
+
+    <div class="card" id="geo-results">
+        <div th:replace="~{partials/geo :: nearResults}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Caveats')}"></head>
+<body>
+
+<nav th:replace="~{layout :: nav('caveats')}"></nav>
+
+<main>
+    <h1>When NOT to use Postgres</h1>
+    <p class="lead">
+        "Just use Postgres" is powerful, but it is not a silver bullet. The video ends with a warning:
+        don't abandon your critical thinking.
+    </p>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>Workload</th>
+                <th>Why Postgres falls short</th>
+                <th>Reach for</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Reading <strong>millions of events / second</strong></td>
+                <td>One primary node becomes a bottleneck</td>
+                <td>ClickHouse, Kafka + stream processing</td>
+            </tr>
+            <tr>
+                <td><strong>Sub-millisecond</strong> in-memory caching at huge concurrency</td>
+                <td>RAM cache in Postgres is very fast but not that fast</td>
+                <td>Redis / Memcached</td>
+            </tr>
+            <tr>
+                <td>Extreme <strong>horizontal scale</strong></td>
+                <td>Postgres scales vertically beautifully; sharding mono DB is painful</td>
+                <td>Distributed systems (CockroachDB, TiDB, ...)</td>
+            </tr>
+            <tr>
+                <td>Billion-row + analytics at warehouse speed</td>
+                <td>A materialized view is not a decoupled columnar warehouse</td>
+                <td>Snowflake / ClickHouse</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3>The verdict from the video</h3>
+        <p>
+            Until you cross that threshold of massive enterprise scale, leaning on the core battle-tested
+            mechanics of Postgres to run your entire stack is arguably the smartest and most
+            cost-effective engineering decision you can make.
+        </p>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body>
+<header th:replace="~{layout :: topbar}"></header>
+<main class="wrap">
+	<section class="hero">
+		<h1>AWS concepts, one at a time.</h1>
+		<p class="lead">Eight building blocks of the cloud — each backed by a real service in
+			<code>docker-compose.yml</code> (Postgres, Redis, MinIO, DynamoDB Local, LocalStack). Open a
+			station, hit its JSON endpoint, and watch the backing probe flip from
+			<code>simulated</code> to <code>live-compose</code>.</p>
+		<p>
+			<span class="meter-label">stations visited</span>
+			<span class="meter"><span class="meter-fill" th:style="|width:${done * 100.0 / meterMax}%|" th:text="${done} + '/' + ${meterMax}">0/8</span></span>
+		</p>
+	</section>
+
+	<section>
+		<h2 class="section-title">The stations</h2>
+		<div class="grid tiles">
+			<a class="tile" th:each="s : ${concepts}" th:href="@{/station/{slug}(slug=${s.slug})}">
+				<span class="tile-count" th:text="${sStat.index < 9 ? '0' + sStat.index : sStat.index}">08</span>
+				<span class="tile-name" th:text="${s.name}">S3</span>
+				<span class="tile-hint" th:text="${s.awsService}">Amazon S3</span>
+			</a>
+		</div>
+	</section>
+
+	<section>
+		<h2 class="section-title">One API in front of everything</h2>
+		<pre><code>GET  /api            — every concept
+GET  /api/s3         — object storage (MinIO)
+GET  /api/rds        — relational DB (Postgres)
+GET  /api/elasticache— cache (Redis)
+GET  /api/dynamodb   — NoSQL (DynamoDB Local)
+GET  /api/sqs        — queue (LocalStack)
+GET  /api/lambda     — serverless (LocalStack)
+GET  /api/cloudfront — CDN (this app)
+GET  /api/iam        — authz (this app)</code></pre>
+	</section>
+</main>
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

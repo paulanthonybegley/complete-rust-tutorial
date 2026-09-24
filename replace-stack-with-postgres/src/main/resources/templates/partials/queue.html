@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="jobsView">
+    <div class="flash" th:if="${flash != null}">
+        <p th:text="${flash}"></p>
+    </div>
+
+    <div class="stats">
+        <div class="stat" th:each="s : ${statuses}">
+            <div class="n">
+                <span th:classappend="'status ' + ${s.status}" th:text="${s.count}">0</span>
+            </div>
+            <div class="l" th:text="${s.status}"></div>
+        </div>
+        <div class="stat">
+            <div class="n" th:text="${workers}">3</div>
+            <div class="l">workers</div>
+        </div>
+        <div class="stat">
+            <div class="n" th:text="${doneCount}">0</div>
+            <div class="l">processed this boot</div>
+        </div>
+        <div class="stat">
+            <div class="n" th:text="${ratePerMin}">0</div>
+            <div class="l">jobs / minute</div>
+        </div>
+        <div class="stat">
+            <div class="n" th:text="${avgMs}">0</div>
+            <div class="l">avg ms / job</div>
+        </div>
+        <div class="stat">
+            <div class="n" th:text="${failedCount}">0</div>
+            <div class="l">failed this boot</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Kind</th>
+            <th>Payload</th>
+            <th>Status</th>
+            <th>Attempts</th>
+            <th>Error / result</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(jobs)}">
+            <td colspan="6" class="empty">No jobs yet.</td>
+        </tr>
+        <tr th:each="j : ${jobs}">
+            <td th:text="${j.id}">1</td>
+            <td th:text="${j.kind}">email</td>
+            <td class="mono" th:text="${j.payload}"></td>
+            <td>
+                <span class="status" th:classappend="${j.status}" th:text="${j.status}"></span>
+            </td>
+            <td th:text="${j.attempts + ' / ' + j.maxAttempts}">0/3</td>
+            <td class="small">
+                <span th:if="${j.lastError}" class="error-styled" th:text="${j.lastError}"></span>
+                <span th:if="${j.result}" class="muted" th:text="${j.result}"></span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="small muted" th:text="${'(auto-refreshes every 3s) ' + #lists.size(jobs) + ' most recent of the jobs table'}"></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Job queue')}"></head>
+<body>
+
+<nav th:replace="~{layout :: nav('queue')}"></nav>
+
+<main>
+    <h1>Job queue via <code>FOR UPDATE SKIP LOCKED</code> <span class="replaces">replaces Redis / RabbitMQ / Kafka</span></h1>
+    <p class="lead">
+        A background queue inside a plain table. Workers grab rows with <code>FOR UPDATE SKIP LOCKED</code>:
+        each worker locks the row it claims, and <em>skips</em> rows already locked by another worker instead
+        of waiting. No deadlocks, no dedicated broker, and ACID guarantees a message queue cannot give you —
+        if a worker crashes mid-job, the row simply becomes claimable again.
+    </p>
+
+    <div class="card">
+        <h3>The claim query (runs 3 workers at ~150ms polling)</h3>
+        <pre class="sql">WITH claimed AS (
+  SELECT id FROM jobs
+  WHERE status = 'pending'
+  ORDER BY created_at
+  LIMIT 1
+  FOR UPDATE SKIP LOCKED          -- skip rows other workers already locked
+)
+UPDATE jobs SET status = 'running', started_at = now(), attempts = attempts + 1
+FROM claimed
+WHERE jobs.id = claimed.id
+RETURNING jobs.id, jobs.kind;</pre>
+        <p class="small muted">
+            Tip: enqueue a job with <code>"fail": true</code> in the payload to watch it retry up to
+            <code>max_attempts</code> times before landing in the <code>failed</code> bucket.
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>Enqueue a job</h3>
+        <form hx-post="/queue/enqueue" hx-target="#jobs-view" hx-swap="innerHTML">
+            <div>
+                <label>Kind</label>
+                <select name="kind">
+                    <option>email</option>
+                    <option>report</option>
+                    <option>thumbnail</option>
+                </select>
+            </div>
+            <div>
+                <label>Payload (JSON)</label>
+                <textarea name="payload" rows="3" cols="38">{"to": "mom@example.com", "subject": "I replaced my stack with Postgres"}</textarea>
+            </div>
+            <button type="submit">Enqueue</button>
+        </form>
+    </div>
+
+    <div class="card" id="jobs-view"
+         hx-get="/queue/jobs"
+         hx-trigger="every 3s"
+         hx-swap="innerHTML"
+         hx-indicator="this">
+        <div th:replace="~{partials/queue :: jobsView}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

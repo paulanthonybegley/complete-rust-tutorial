@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="results">
+    <p class="small muted" th:if="${view.note != null and !view.note.isEmpty()}" th:text="${view.note}"></p>
+
+    <div th:if="${!view.suggestions.isEmpty()}" class="card">
+        <h3>Did you mean</h3>
+        <ul class="tight" th:each="s : ${view.suggestions}">
+            <li>
+                <strong th:text="${s.title}"></strong>
+                <span class="muted" th:text="${' — by ' + s.author}"></span>
+                <span class="bar">
+                    <span class="track" ><span class="fill" th:style="'width:' + ${s.similarity * 100} + '%'"></span></span>
+                    <span th:text="${#numbers.formatDecimal(s.similarity, 1, 2)}">0.00</span>
+                </span>
+            </li>
+        </ul>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Tag</th>
+            <th>Relevance</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${view.results.isEmpty()} and ${!view.q.isEmpty()}">
+            <td colspan="4" class="empty">No matches. Enable fuzzy matching or try another query.</td>
+        </tr>
+        <tr th:each="r : ${view.results}">
+            <td>
+                <strong th:text="${r.title}">Title</strong>
+                <div class="small muted" th:utext="${r.snippet}">snippet</div>
+            </td>
+            <td th:text="${r.author}"></td>
+            <td><span class="pill" th:text="${r.tag}"></span></td>
+            <td>
+                <div class="bar">
+                    <span class="track"><span class="fill" th:style="'width:' + ${r.rank * 100} + '%'"></span></span>
+                    <span th:text="${#numbers.formatDecimal(r.rank, 1, 3)}">0.000</span>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="small muted" th:text="${view.hitCount + ' result(s)'}"></p>
+</div>
+</body>
+</html>

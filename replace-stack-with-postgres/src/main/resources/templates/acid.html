@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('ACID + extensibility')}"></head>
+<body>
+
+<nav th:replace="~{layout :: nav('acid')}"></nav>
+
+<main>
+    <h1>ACID + extensibility: the weapon</h1>
+    <p class="lead">
+        Before dismantling your stack, understand the foundation. Postgres is an
+        <span class="pill">object-relational</span> database: it gives you rock-solid ACID transactions,
+        and — because of how extensible it is — it can grow custom data types, arrays, geometric shapes,
+        key/value stores and third-party extensions (PostGIS, pgvector, pg_trgm...).
+    </p>
+
+    <div class="card">
+        <h3>ACID in one line</h3>
+        <p>
+            Every transaction is <strong>Atomic</strong>, <strong>Consistent</strong>, <strong>Isolated</strong> and
+            <strong>Durable</strong>. When a crash happens, your user data is not corrupted and your job queue
+            never double-pays a worker. That guarantee is exactly what makes the replacements on the other
+            pages safe to run inside the database.
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>Extensible types — not just rows and columns</h3>
+        <p>Native custom types Postgres ships out of the box, used in this very project:</p>
+        <ul class="tight">
+            <li><code>JSONB</code> — binary JSON documents (the JSONB demo)</li>
+            <li><code>vector</code> — extension type for embeddings (the pgvector demo)</li>
+            <li><code>geography(Point, 4326)</code> — extension type for coordinates (the PostGIS demo)</li>
+            <li><code>tsvector</code> / <code>tsquery</code> — parsed text for search (the full-text demo)</li>
+            <li><code>hstore</code> — plain key/value pairs</li>
+            <li>multidimensional arrays, geometric <code>point</code>/<code>circle</code>/<code>polygon</code>, ranges, enums, ...</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>Everything this app runs on — one database, one schema</h3>
+        <pre class="sql">CREATE EXTENSION postgis;   -- geospatial  (replaces GIS servers)
+CREATE EXTENSION vector;    -- embeddings  (replaces Pinecone)
+CREATE EXTENSION pg_trgm;   -- trigrams    (replaces fuzzy search)</pre>
+        <p class="small muted">
+            "Extensible like the Skyrim of databases — a rock-solid foundation you can aggressively mod
+            until it does exactly what you want."
+        </p>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Time-series')}"></head>
+<body>
+
+<nav th:replace="~{layout :: nav('timeseries')}"></nav>
+
+<main>
+    <h1>Declarative partitioning + BRIN <span class="replaces">replaces InfluxDB / Prometheus / time-series DBs</span></h1>
+    <p class="lead">
+        ~362,000 telemetry events are spread transparently across one row per month partitions by range on
+        <code>occurred_at</code>. Because data is written roughly in time order, a <strong>BRIN</strong>
+        (block range) index only records min/max timestamps per disk block instead of indexing every row.
+        A range query skips whole partitions and millions of disk pages that cannot contain the target
+        timestamps.
+    </p>
+
+    <div class="card">
+        <h3>Schema + index</h3>
+        <pre class="sql">CREATE TABLE events (...) PARTITION BY RANGE (occurred_at);
+
+CREATE TABLE events_2025_01 PARTITION OF events
+  FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
+-- ... one child table per month ...
+CREATE TABLE events_default PARTITION OF events DEFAULT;
+
+CREATE INDEX idx_events_brin ON events (occurred_at)
+  WITH (pages_per_range = 32);</pre>
+    </div>
+
+    <div class="card">
+        <h3>Generate more data or run a range query</h3>
+        <form hx-post="/timeseries/seed" hx-target="#ts-buckets" hx-swap="innerHTML">
+            <div>
+                <label>Rows to append (chronologically)</label>
+                <select name="rows">
+                    <option value="50000">50,000</option>
+                    <option value="100000">100,000</option>
+                </select>
+            </div>
+            <button type="submit">Seed more events</button>
+        </form>
+
+        <form hx-get="/timeseries/query" hx-target="#range-result">
+            <div>
+                <label for="from">From</label>
+                <input id="from" name="from" type="date" th:value="${query.from}">
+            </div>
+            <div>
+                <label for="to">To</label>
+                <input id="to" name="to" type="date" th:value="${query.to}">
+            </div>
+            <button type="submit">Run range query</button>
+        </form>
+    </div>
+
+    <div class="card" id="ts-buckets">
+        <div th:replace="~{partials/timeseries :: buckets}"></div>
+    </div>
+
+    <div class="card" id="range-result">
+        <div th:replace="~{partials/timeseries :: range}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

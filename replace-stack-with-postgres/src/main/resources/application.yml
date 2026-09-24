@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: postgresstack
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: demo_app
+    password: demo_app
+    hikari:
+      maximum-pool-size: 12
+      connection-timeout: 10000
+    driver-class-name: org.postgresql.Driver
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.example.postgresstack.queue: INFO
