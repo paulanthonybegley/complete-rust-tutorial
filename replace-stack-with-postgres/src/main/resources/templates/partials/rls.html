@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="notes">
+    <div class="flash" th:if="${flash != null and !flash.isEmpty()}">
+        <p th:text="${flash}"></p>
+    </div>
+    <div class="error" th:if="${spoofResult == 'rejected'}">
+        <p><strong>Spoof blocked by RLS.</strong> You authenticated as user <span th:text="${uid}"></span>
+            but tried to insert with <code>owner_id</code> of someone else. The
+            <code>WITH CHECK</code> policy dropped the row — it never reached the table.</p>
+    </div>
+
+    <p class="small muted" th:text="'These rows were returned by the SAME SQL statement for every user — SELECT * FROM private_notes — Postgres filtered them by the RLS policy.'"></p>
+
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Note</th>
+            <th>Owner</th>
+            <th>Created</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${notes.isEmpty()}">
+            <td colspan="4" class="empty">No notes visible to user <span th:text="${uid}"></span>.</td>
+        </tr>
+        <tr th:each="n : ${notes}">
+            <td th:text="${n.id}"></td>
+            <td th:text="${n.content}"></td>
+            <td th:text="${n.ownerName}"></td>
+            <td th:text="${#temporals.format(n.createdAt, 'dd MMM HH:mm')}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <pre class="sql">-- identical query for alice (uid 1):
+SET LOCAL app.current_user = 1;  -- uid = 1
+SELECT * FROM private_notes;     -- returns only alice's rows
+
+-- swap the same SELECT to bob's transaction (uid 2): a different set of rows
+SET LOCAL app.current_user = 2;
+SELECT * FROM private_notes;     -- returns only bob's rows</pre>
+</div>
+</body>
+</html>

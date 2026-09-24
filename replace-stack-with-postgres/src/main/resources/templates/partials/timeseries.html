@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="buckets">
+    <h3>Events per month, served from the parent table</h3>
+    <p class="small muted">Each bar is an aggregating query over the partitioned parent — the planner physically prunes non-matching partitions.</p>
+    <table>
+        <thead>
+        <tr>
+            <th>Month</th>
+            <th>Events</th>
+            <th>Devices</th>
+            <th>Share</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="b : ${buckets}">
+            <td th:text="${b.month}"></td>
+            <td th:text="${b.events}"></td>
+            <td th:text="${b.devices}"></td>
+            <td>
+                <div class="bar">
+                    <span class="track" style="width:180px">
+                        <span class="fill" th:style="'width:' + ${b.events * 100.0 / maxBucket} + '%'"></span>
+                    </span>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Physical partitions (pg_inherits)</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Partition</th>
+            <th>Rows</th>
+            <th>Size</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${partitions}">
+            <td class="mono" th:text="${p.name}"></td>
+            <td th:text="${p.rows}"></td>
+            <td th:text="${p.size}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="small muted" th:if="${seeded != null}">Seeded <span th:text="${seeded}"></span> new rows; partitions were appended to automatically by the range bounds.</p>
+</div>
+
+<div th:fragment="range">
+    <h3>Range query <span th:text="'[' + ${query.from} + ' → ' + ${query.to} + ')'"></span></h3>
+    <div class="stats">
+        <div class="stat">
+            <div class="n" th:text="${query.count}">0</div>
+            <div class="l">matching events</div>
+        </div>
+    </div>
+
+    <h3>Planner output (EXPLAIN ANALYZE, BUFFERS)</h3>
+    <pre class="sql" th:text="${#strings.listJoin(query.explainPlan, '\n')}"></pre>
+
+    <h3>The same query with <code>SET LOCAL enable_seqscan = off</code> (shows the BRIN index)</h3>
+    <p class="small muted">Watch it skip disk pages: only the block ranges containing your timestamps get scanned.</p>
+    <pre class="sql" th:text="${#strings.listJoin(query.brinPlan, '\n')}"></pre>
+</div>
+</body>
+</html>

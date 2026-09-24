@@ -36,6 +36,7 @@ public class TimeSeriesController {
         model.addAttribute("buckets", buckets());
         model.addAttribute("partitions", partitions());
         model.addAttribute("query", runQuery("2025-03-01", "2025-03-08"));
+        fillMaxBucket(model);
         return "timeseries";
     }
 
@@ -59,7 +60,20 @@ public class TimeSeriesController {
         model.addAttribute("seeded", rows);
         model.addAttribute("buckets", buckets());
         model.addAttribute("partitions", partitions());
+        fillMaxBucket(model);
         return "partials/timeseries :: buckets";
+    }
+
+    private void fillMaxBucket(Model model) {
+        Object b = model.getAttribute("buckets");
+        if (b instanceof List<?> list) {
+            long max = list.stream()
+                .filter(Bucket.class::isInstance)
+                .map(Bucket.class::cast)
+                .mapToLong(Bucket::events)
+                .max().orElse(1);
+            model.addAttribute("maxBucket", Math.max(1, max));
+        }
     }
 
     private List<Bucket> buckets() {

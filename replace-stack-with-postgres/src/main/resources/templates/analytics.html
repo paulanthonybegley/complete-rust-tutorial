@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Dashboards')}"></head>
+<body>
+
+<nav th:replace="~{layout :: nav('analytics')}"></nav>
+
+<main>
+    <h1>Materialized views <span class="replaces">replaces Snowflake / data warehouses (for dashboards)</span></h1>
+    <p class="lead">
+        A normal view re-runs its aggregation from scratch on every hit — a dashboard dies under load. A
+        <strong>materialized view</strong> runs the heavy query once and stores the result on disk.
+        <code>REFRESH MATERIALIZED VIEW CONCURRENTLY</code> (which requires a unique index) recomputes in the
+        background and hot-swaps the changed rows in without ever locking your dashboard readers.
+    </p>
+
+    <div class="card">
+        <h3>The view + the refresh</h3>
+        <pre class="sql">CREATE MATERIALIZED VIEW mv_daily_sales AS
+SELECT ordered_on, product,
+       SUM(units) AS units, SUM(units * unit_price) AS revenue, COUNT(*) AS orders
+FROM orders GROUP BY ordered_on, product;
+
+CREATE UNIQUE INDEX idx_mv_daily_sales ON mv_daily_sales (ordered_on, product);
+
+-- recompute in the background, swap rows in, never block readers:
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_sales;</pre>
+    </div>
+
+    <div class="card">
+        <form hx-post="/analytics/refresh" hx-target="#dashboard" hx-swap="innerHTML">
+            <button type="submit">Refresh concurrently</button>
+        </form>
+        <form hx-get="/analytics/compare" hx-target="#compare-result" hx-swap="innerHTML">
+            <button class="ghost" type="submit">Compare: raw GROUP BY vs materialized view</button>
+        </form>
+    </div>
+
+    <div class="card" id="dashboard">
+        <div th:replace="~{partials/analytics :: dashboard}"></div>
+    </div>
+
+    <div class="card" id="compare-result"></div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

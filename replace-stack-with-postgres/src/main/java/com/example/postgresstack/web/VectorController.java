@@ -26,7 +26,7 @@ public class VectorController {
 
     @GetMapping("/vector")
     public String page(Model model) {
-        model.addAttribute("view", search("", "", "", 0, model));
+        search("", "", "", 0, model);
         return "vector";
     }
 
@@ -36,7 +36,7 @@ public class VectorController {
                           @RequestParam(defaultValue = "") String author,
                           @RequestParam(defaultValue = "0") int days,
                           Model model) {
-        model.addAttribute("view", search(q, tag, author, days, model));
+        search(q, tag, author, days, model);
         return "partials/vector :: results";
     }
 
@@ -75,8 +75,8 @@ public class VectorController {
         }
 
         model.addAttribute("filters", new FilterOptions(
-            jdbc.queryForList("SELECT DISTINCT tag FROM documents ORDER BY tag", String.class),
-            jdbc.queryForList("SELECT DISTINCT author FROM documents ORDER BY author", String.class)));
+            jdbc.queryForList("SELECT DISTINCT tag FROM documents ORDER BY tag", new MapSqlParameterSource(), String.class),
+            jdbc.queryForList("SELECT DISTINCT author FROM documents ORDER BY author", new MapSqlParameterSource(), String.class)));
         model.addAttribute("q", q);
         model.addAttribute("tag", tag);
         model.addAttribute("author", author);

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<div th:fragment="dashboard">
+    <div class="flash" th:if="${flash != null}">
+        <p th:text="${flash}"></p>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="n" th:text="${'$' + dashboard.totalRevenue}">0</div>
+            <div class="l">revenue (14 days)</div>
+        </div>
+        <div class="stat">
+            <div class="n" th:text="${dashboard.totalOrders}">0</div>
+            <div class="l">orders (14 days)</div>
+        </div>
+        <div class="stat">
+            <div class="n" th:text="${dashboard.mvRowCount}">0</div>
+            <div class="l">rows pre-computed in MV</div>
+        </div>
+        <div class="stat">
+            <div class="n small" th:text="${dashboard.refreshedAt}">-</div>
+            <div class="l">last refresh</div>
+        </div>
+    </div>
+
+    <h3>Daily sales (served from the stored MV, zero aggregation at query time)</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Revenue</th>
+            <th>Units</th>
+            <th>Orders</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${dashboard.days}">
+            <td th:text="${d.date}"></td>
+            <td th:text="${'$' + d.revenue}"></td>
+            <td th:text="${d.units}"></td>
+            <td th:text="${d.orders}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Top products (also from the MV)</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Product</th>
+            <th>Revenue</th>
+            <th>Units</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${dashboard.top}">
+            <td th:text="${p.product}"></td>
+            <td th:text="${'$' + p.revenue}"></td>
+            <td th:text="${p.units}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:fragment="compare">
+    <h3>Live timing comparison (EXPLAIN ANALYZE)</h3>
+    <p class="small muted">
+        Both queries read and aggregate the exact same underlying data. Small table, big difference —
+        several orders of magnitude once the order table grows.
+    </p>
+    <div class="stats">
+        <div class="stat">
+            <div class="n" th:text="${rawTimeMs + ' ms'}">0</div>
+            <div class="l">raw GROUP BY over orders</div>
+        </div>
+        <div class="stat">
+            <div class="n" th:text="${mvTimeMs + ' ms'}">0</div>
+            <div class="l">SELECT from materialized view</div>
+        </div>
+    </div>
+    <p class="small muted" th:text="'The MV stores ' + ${mvRows} + ' pre-aggregated rows on disk; the live list above is that storage, not a GROUP BY.'"></p>
+</div>
+</body>
+</html>

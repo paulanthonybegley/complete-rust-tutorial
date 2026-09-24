@@ -212,7 +212,7 @@ CREATE TABLE events_2025_05 PARTITION OF events FOR VALUES FROM ('2025-05-01') T
 CREATE TABLE events_2025_06 PARTITION OF events FOR VALUES FROM ('2025-06-01') TO ('2025-07-01');
 CREATE TABLE events_default PARTITION OF events DEFAULT;
 
-CREATE INDEX idx_events_brin ON events (occurred_at) WITH (pages_per_range = 32);
+CREATE INDEX idx_events_brin ON events USING brin (occurred_at) WITH (pages_per_range = 32);
 
 INSERT INTO events (id, device, metric, value, occurred_at)
 SELECT
