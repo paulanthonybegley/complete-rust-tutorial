@@ -11,3 +11,6 @@
 The API returns `mode: live-compose` only when the port probe succeeds.
 Otherwise `mode: simulated`. Both shapes have identical fields, so the front
 end teaches the concept regardless of whether Docker is running.
+
+## Read alongside
+- [issue-fixed.md](issue-fixed.md) — every real failure in this repo and the exact log line that explained it.
