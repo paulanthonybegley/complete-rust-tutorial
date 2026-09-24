@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body>
+<header th:replace="~{layout :: topbar}"></header>
+<main class="wrap">
+	<section>
+		<p><a th:href="@{/}" class="back">← all stations</a></p>
+		<h1 th:text="${c.name}">Amazon S3</h1>
+		<p class="lead" th:text="${c.role}">put/get/delete byte blobs</p>
+		<p><strong th:text="${c.awsService}"></strong> via <code th:text="${c.dockerCompose}"></code></p>
+		<pre><code th:text="${c.apiHint}">GET /api/s3</code></pre>
+	</section>
+
+	<section>
+		<h2 class="section-title">Try the endpoint</h2>
+		<button class="btn" hx-get="javascript:void(0)"
+			th:attr="hx-get=@{'/api/' + ${c.slug}}"
+			hx-target="#out" hx-swap="innerHTML">Call <code th:text="'/api/' + ${c.slug}"></code></button>
+		<pre id="out">{"mode":"press the button"}</pre>
+	</section>
+</main>
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

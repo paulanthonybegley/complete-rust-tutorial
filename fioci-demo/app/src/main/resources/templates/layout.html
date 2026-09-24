@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title th:text="${pageTitle}">fioci-demo — AWS concepts on docker-compose</title>
+	<link rel="stylesheet" th:href="@{/css/style.css}">
+	<script th:src="@{/js/htmx.min.js}" defer></script>
+</head>
+<body>
+<header th:fragment="topbar">
+	<nav class="topbar">
+		<a class="brand" th:href="@{/}">fioci<span>demo</span></a>
+		<span class="tagline">AWS concepts · one Compose file · one API</span>
+	</nav>
+</header>
+<footer th:fragment="footer">
+	<p class="muted">fioci-demo — educational Spring Boot + Docker Compose sandbox. No AWS account needed.</p>
+</footer>
+</body>
+</html>

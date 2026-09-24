@@ -357,3 +357,21 @@ stop-over1m:
 test-over1m:
 	@echo "==> Testing over1m-sec-requests (1M-RPS arc simulator, no Docker needed)"
 	+mvn -B -f $(OVER1M_APP)/app/pom.xml test
+
+# ---------------------------------------------------------------------------
+# fioci-demo — educational AWS-concepts app (compose-backed, standalone)
+# ---------------------------------------------------------------------------
+FIOCI_APP    := fioci-demo
+PORT_FIOCI   ?= 8095
+
+.PHONY: start-fioci-demo stop-fioci-demo test-fioci-demo
+
+start-fioci-demo:
+	@$(call start_spring_app,$(FIOCI_APP)/app,$(PORT_FIOCI))
+
+stop-fioci-demo:
+	@$(call stop_spring_app,$(FIOCI_APP)/app,$(PORT_FIOCI))
+
+test-fioci-demo:
+	@echo "==> Testing fioci-demo (AWS concepts on docker-compose, no Docker needed for app)"
+	+mvn -B -f $(FIOCI_APP)/app/pom.xml test
