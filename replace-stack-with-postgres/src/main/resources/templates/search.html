@@ -53,7 +53,9 @@ ORDER BY sim DESC;</pre>
         </form>
     </div>
 
-    <div class="card" id="search-results" th:replace="~{partials/search :: results}"></div>
+    <div class="card" id="search-results">
+        <div th:replace="~{partials/search :: results}"></div>
+    </div>
 </main>
 
 <footer th:replace="~{layout :: footer}"></footer>
