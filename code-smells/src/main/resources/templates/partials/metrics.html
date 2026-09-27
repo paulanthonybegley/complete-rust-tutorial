@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="metrics(m, label)" class="metrics">
+    <table>
+        <caption th:text="label">metrics</caption>
+        <tr><th>code lines</th><td th:text="${m.codeLines}">0</td></tr>
+        <tr><th>comment lines</th><td th:text="${m.commentLines}">0</td></tr>
+        <tr><th>method-ish lines</th><td th:text="${m.methodCount}">0</td></tr>
+        <tr><th>longest method</th><td th:text="${m.longestMethod}">0</td></tr>
+        <tr><th>field/assignments</th><td th:text="${m.fieldCount}">0</td></tr>
+        <tr><th>type mentions</th><td th:text="${m.typeMentions}">0</td></tr>
+        <tr><th>switch/case lines</th><td th:text="${m.branchCount}">0</td></tr>
+    </table>
+</section>
+</body>
+</html>

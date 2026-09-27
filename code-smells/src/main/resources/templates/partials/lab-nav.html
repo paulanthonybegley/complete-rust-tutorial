@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="lab-nav" class="lab-nav">
+    <a th:if="${previous}" th:href="@{/lab/{slug}(slug=${previous.slug})}"
+       th:text="'← Lab ' + ${previous.episode} + ' · ' + ${previous.title}">prev lab</a>
+    <a th:unless="${previous}" href="#quiz" class="finished">← you finished the course</a>
+    <span class="mid" th:text="'Lab ' + ${smell.episode} + ' / 15'">3 / 15</span>
+    <a th:if="${next}" th:href="@{/lab/{slug}(slug=${next.slug})}"
+       th:text="${next.title} + ' · Lab ' + ${next.episode} + ' →'">next lab</a>
+    <a th:unless="${next}" href="#quiz" class="finished">course complete →</a>
+</div>
+</body>
+</html>

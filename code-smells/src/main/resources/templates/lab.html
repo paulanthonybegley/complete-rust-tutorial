@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head(${smell.title})}"></head>
+<body>
+<nav th:replace="~{layout :: nav('')}"></nav>
+
+<a th:if="${previous}" th:href="@{/lab/{slug}(slug=${previous.slug})}" class="rail left"
+   th:text="'← ' + ${previous.episode} + ' ' + ${previous.title}">prev</a>
+<a th:if="${next}" th:href="@{/lab/{slug}(slug=${next.slug})}" class="rail right"
+   th:text="'→ ' + ${next.episode} + ' ' + ${next.title}">next</a>
+
+<main class="wrap lab">
+    <header class="lab-header">
+        <p class="crumb" th:text="'Lab ' + ${smell.episode} + ' of 15 · ' + ${index} + ' covered'">Lab 1 of 15</p>
+        <h1 th:text="${smell.title}">Long Method</h1>
+        <p class="sub" th:text="${smell.subtitle}">one method five screens long</p>
+    </header>
+
+    <div th:replace="~{partials/lab-nav :: lab-nav}"></div>
+
+    <section class="summary">
+        <p th:text="${smell.summary}">summary</p>
+    </section>
+
+    <section class="two" id="symptoms">
+        <div class="card">
+            <h2>The smell</h2>
+            <p th:text="${smell.symptom}">symptom</p>
+        </div>
+        <div class="card">
+            <h2>The fix</h2>
+            <p th:text="${smell.fix}">fix</p>
+            <h2>The why</h2>
+            <p th:text="${smell.why}">why</p>
+        </div>
+    </section>
+
+    <section class="code-columns">
+        <div class="code-panel">
+            <div class="panel-head"><span class="dot bad"></span> Smelly &#8212; before</div>
+            <div class="metrics" th:replace="~{partials/metrics :: metrics(${beforeMetrics}, 'Before')}"></div>
+            <pre class="code"><code th:each="line, st : ${beforeLines}"><span class="ln" th:text="${st.count}">1</span> <span class="txt" th:text="${line}">code</span></code></pre>
+        </div>
+        <div class="code-panel">
+            <div class="panel-head"><span class="dot good"></span> Refactored &#8212; after</div>
+            <div class="metrics" th:replace="~{partials/metrics :: metrics(${afterMetrics}, 'After')}"></div>
+            <pre class="code"><code th:each="line, st : ${afterLines}"><span class="ln" th:text="${st.count}">1</span> <span class="txt" th:text="${line}">code</span></code></pre>
+        </div>
+    </section>
+
+    <section class="diff">
+        <h2>What the refactor touched <span class="muted" th:text="'(' + ${changedLines} + ' lines)'">(n lines)</span></h2>
+        <pre class="code diff-view" th:replace="~{partials/diff :: diff}"></pre>
+    </section>
+
+    <section class="quiz" id="quiz">
+        <h2>Quiz &#8212; prove it</h2>
+        <p class="sub">Name the smell, then name the refactoring. Both right = double points on the board.</p>
+        <form id="quiz-form"
+              th:hx-post="@{/lab/{slug}/check(slug=${smell.slug})}"
+              hx-target="#quiz-result" hx-swap="innerHTML">
+            <label class="field">Your name
+                <input type="text" id="player" name="player" placeholder="anonymous"
+                       autocomplete="off" data-player>
+            </label>
+
+            <fieldset>
+                <legend>1 &#8212; which smell is this code suffering from?</legend>
+                <label th:each="opt, st : ${smell.identifyOptions}" class="option">
+                    <input type="radio" name="identify" th:value="${opt}" th:required="true">
+                    <span th:text="${opt}">option</span>
+                </label>
+            </fieldset>
+
+            <fieldset>
+                <legend>2 &#8212; what is the refactoring that resolves it?</legend>
+                <label th:each="opt, st : ${smell.refactorOptions}" class="option">
+                    <input type="radio" name="refactor" th:value="${opt}" th:required="true">
+                    <span th:text="${opt}">option</span>
+                </label>
+            </fieldset>
+
+            <button type="submit" class="cta">Check my answer</button>
+        </form>
+        <div id="quiz-result" aria-live="polite"></div>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

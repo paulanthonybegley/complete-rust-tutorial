@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<ol th:fragment="diff">
+    <li th:each="line : ${diff}" th:classappend="${line.kind.name().toLowerCase()}">
+        <span class="ln" th:text="${line.beforeLine} >= 0 ? ${line.beforeLine} + '.' : '·'">_</span>
+        <span class="txt" th:text="${line.text}">code</span>
+    </li>
+</ol>
+</body>
+</html>

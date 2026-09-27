@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="check"
+     th:classappend="${allCorrect} ? 'verdict win' : 'verdict'">
+    <h3 th:text="${allCorrect} ? 'Double right — two green lights.' : 'Almost — compare with the After panel.'">verdict</h3>
+    <ul class="verdict-list">
+        <li th:classappend="${identifyCorrect} ? 'ok' : 'miss'">
+            <span class="k">Smell:</span>
+            <span class="you" th:text="'you said: ' + ${identifyGiven}">you said …</span>
+            <span th:if="${identifyCorrect}">right — resolve it with the refactoring you chose.</span>
+            <span th:unless="${identifyCorrect}" th:text="'the tell was: ' + ${smell.symptom}">hint</span>
+        </li>
+        <li th:classappend="${refactorCorrect} ? 'ok' : 'miss'">
+            <span class="k">Refactor:</span>
+            <span class="you" th:text="'you said: ' + ${refactorGiven}">you said …</span>
+            <span th:if="${refactorCorrect}">right — that is the extraction this smell needs.</span>
+            <span th:unless="${refactorCorrect}" th:text="'expected: ' + ${smell.fix}">hint</span>
+        </li>
+    </ul>
+</div>
+<div th:replace="~{partials/scoreboard :: scoreboard}" class="after-check"></div>
+</body>
+</html>

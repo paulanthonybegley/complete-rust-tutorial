@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layout :: head('Course')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('home')}"></nav>
+
+<main class="wrap">
+    <section class="hero">
+        <h1>Identifying and Refactoring Troubled Code</h1>
+        <p class="lede">A hands-on companion to <em>The Serious CTO</em> playlist on code smells.
+            <span th:text="${total}">15</span> labs. In each: a smelly snippet, its refactored twin,
+            metrics that show the win, a line diff, and a quiz. Attempts are saved, so the scoreboard
+            below is evidence, not vibes.</p>
+        <p class="tip"><strong>How to learn:</strong> read the summary first, then the smelly code, try to name
+            the smell and the refactor <em>before</em> you look at the After panel. Every lab ends with a
+            two-question quiz — identify the smell, then choose the refactoring. Both must be right to score a double.</p>
+    </section>
+
+    <section class="syllabus">
+        <ol class="labs">
+            <li th:each="smell : ${smells}" class="lab-card">
+                <span class="num" th:text="${smell.episode}">1</span>
+                <div class="lab-body">
+                    <h3><a th:href="@{/lab/{slug}(slug=${smell.slug})}" th:text="${smell.title}">Long Method</a></h3>
+                    <p class="sub" th:text="${smell.subtitle}">one method five screens long</p>
+                    <a th:href="|https://www.youtube.com/watch?v=${smell.videoId}|" target="_blank" class="vid"
+                       th:text="'episode film'">watch</a>
+                </div>
+            </li>
+        </ol>
+    </section>
+
+    <section id="scoreboard" class="scoreboard">
+        <h2>Scoreboard</h2>
+        <div th:replace="~{partials/scoreboard :: scoreboard}"></div>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

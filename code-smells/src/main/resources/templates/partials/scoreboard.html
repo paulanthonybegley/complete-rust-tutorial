@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="scoreboard" class="score-panel">
+    <h3>Leaderboard</h3>
+    <p th:if="${#lists.isEmpty(leaderboard)}" class="empty">
+        No attempts yet — the database starts quiet. Take a quiz and your double-rights land here.
+    </p>
+    <table th:unless="${#lists.isEmpty(leaderboard)}">
+        <thead>
+        <tr><th>player</th><th>attempts</th><th>smell right</th><th>double-right</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${leaderboard}">
+            <td th:text="${row.player}">player</td>
+            <td th:text="${row.attempts}">0</td>
+            <td th:text="${row.identifyOk}">0</td>
+            <td th:text="${row.bothOk}">0</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Per-lab performance</h3>
+    <table th:unless="${#lists.isEmpty(labStats)}">
+        <thead>
+        <tr><th>lab</th><th>attempts</th><th>smell correct %</th><th>refactor correct %</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${labStats}">
+            <td th:text="${s.lab}">lab</td>
+            <td th:text="${s.attempts}">0</td>
+            <td th:text="${s.identifyPct}">0</td>
+            <td th:text="${s.refactorPct}">0</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>
