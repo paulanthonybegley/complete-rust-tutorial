@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Hygiene')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('hygiene')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 08 · OBSERVABILITY HYGIENE</span>
+        <h1>PII masking — prove it end to end</h1>
+        <p>
+            The videos list hygiene rules: never log secrets or PII, mask card numbers and emails, and know what your
+            log pipeline does with them. This app logs a "customer signup" line two ways — <em>safe</em>, where the
+            message passes through <code>obs.SafeLog</code> and gets its email and password redacted before the line
+            leaves the JVM, and <em>leak</em>, where the same data is logged raw — the mistake that causes real
+            incidents. Both lines look identical from the calling code. Type a signup below, then read both lines back
+            out of Loki.
+        </p>
+    </header>
+
+    <section class="pane">
+        <h2>Generate a signup log line</h2>
+        <form class="bar" hx-post="/hygiene/log" hx-target="#hygiene-out" hx-swap="outerHTML">
+            <select name="mode">
+                <option value="safe">safe — encoder redacts</option>
+                <option value="leak">leak — raw, no masking</option>
+            </select>
+            <input type="email" name="email" value="alice@example.com">
+            <input type="text" name="name" value="Alice Adeyemi">
+            <input type="password" name="password" value="supersecret-123">
+            <button class="btn" type="submit">write the line</button>
+        </form>
+    </section>
+
+    <div id="hygiene-out"></div>
+
+    <section hx-get="/hygiene/evidence" hx-trigger="load, every 7s" hx-target="this" hx-swap="outerHTML" class="pane">
+        <p class="muted">Querying Loki for both markers…</p>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

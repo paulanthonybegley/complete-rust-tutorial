@@ -1,0 +1,38 @@
+# Alert rules for the observability shop.
+#
+# The whole point of the /alerts lab: an alert should fire only when a HUMAN has
+# something to do (the video series' "alert fatigue" warning). Compare the two
+# groups below. the business rule fires only when checkouts actually start
+# failing at the wrong rate — a CPU spike does not.
+groups:
+  - name: shop.business
+    rules:
+      - alert: FailedCheckoutRateHigh
+        expr: |
+          (
+            sum(rate(checkout_failure_total{application="observability-shop"}[2m])) /
+            clamp_min(sum(rate(checkout_total{application="observability-shop"}[2m])), 1)
+          ) > 0.10
+        for: 30s
+        labels:
+          severity: critical
+          team: checkout
+        annotations:
+          summary: "Too many failed checkouts"
+          description: |
+            Failed checkouts are {{ $value | humanizePercentage }} of all checkouts in
+            the last 2 minutes. The SLO for checkout failures is 10%. Someone should
+            look at the payment path right now.
+          runbook: "https://localhost:8080/incident"
+
+  - name: shop.infra
+    rules:
+      - alert: ShopInstanceDown
+        expr: up{job="observability-shop"} == 0
+        for: 2m
+        labels:
+          severity: page
+          team: platform
+        annotations:
+          summary: "Shop instance is down"
+          description: "The app has been unscrapeable for 2 minutes."

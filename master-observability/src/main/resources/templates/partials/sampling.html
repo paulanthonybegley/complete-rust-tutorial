@@ -1,0 +1,54 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="generated">
+
+    <div class="pane" th:if="${results != null}">
+        <div class="panehead">
+            <h2 th:text="'Burst of ' + ${n} + ' ' + ${mix} + ' probes'">burst</h2>
+            <span class="muted"><span class="ok" th:text="${kept} + ' kept by policy'">k</span> ·
+            <span class="muted" th:text="${results.size() - kept} + ' dropped'">d</span></span>
+        </div>
+        <p class="muted">KEEP/OK is what the <em>app-side</em> policy decided. Whether the trace actually appears in Jaeger
+        is decided again downstream by the collector. Try the links below now, and again after a fresh burst, to see both.</p>
+        <table class="rows">
+            <thead><tr><th>probe</th><th>status</th><th>latency</th><th>reason</th><th>vip</th><th>app decided</th><th>trace</th></tr></thead>
+            <tbody>
+                <tr th:each="r : ${results}">
+                    <td th:text="${r.endpoint()}">ep</td>
+                    <td><span th:if="${r.failed()}" class="bad">error</span><span th:unless="${r.failed()}" class="ok">ok</span></td>
+                    <td th:text="${r.durationMs()} + ' ms'">ms</td>
+                    <td th:text="${r.reason()}">reason</td>
+                    <td th:text="${r.vip()} ? '⭐' : '—'">vip</td>
+                    <td><span th:if="${r.kept()}" class="ok">keep</span><span th:unless="${r.kept()}" class="bad">drop</span></td>
+                    <td><a class="mono" th:if="${r.kept()}" th:href="@{/traces/{id}(id=${r.traceId()})}" th:text="${#strings.substring(r.traceId(),0,12)}">tid</a>
+                        <span th:unless="${r.kept()}" class="muted">not exported</span></td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="muted">Cross-check in <a th:href="${jaegerUrl}" target="_blank">Jaeger search</a>:
+        every <code>drop</code> row should be absent — the app never sent it. Rows the collector dropped show an error
+        span in Jaeger that this page's link can't find.</p>
+    </div>
+    <p th:if="${results == null}" class="muted">Burst your probes first.</p>
+
+</th:block>
+
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="stats">
+
+    <div class="pane">
+        <div class="panehead">
+            <h2>Decisions recorded in the last 15 minutes</h2>
+            <span class="muted"><code th:text="${total}">t</code> total · <code th:text="${dropped}">d</code> dropped</span>
+        </div>
+        <table class="rows">
+            <thead><tr><th>reason</th><th>kept?</th><th>count</th></tr></thead>
+            <tbody>
+                <tr th:each="row : ${rows}">
+                    <td><code th:text="${row.reason}">r</code></td>
+                    <td th:text="${row.kept} ? 'kept' : 'dropped'">k</td>
+                    <td th:text="${row.total}">n</td>
+                </tr>
+                <tr th:if="${rows == null or rows.isEmpty()}"><td colspan="3" class="muted">No decisions yet this window.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</th:block>

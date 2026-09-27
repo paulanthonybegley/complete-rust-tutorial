@@ -1,0 +1,60 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="evidence">
+
+    <p th:if="${error}" class="bad" th:text="${error}">error</p>
+
+    <th:block th:if="${order != null}">
+        <div class="flash">
+            <p>Investigating order <strong th:text="${order.id()}">id</strong> ·
+                <span class="bad">failed</span> · recorded error code
+                <code th:text="${order.errorCode()}">code</code></p>
+        </div>
+
+        <div class="grid3">
+            <div class="pane">
+                <h2>1 · The trace</h2>
+                <p th:if="${trace == null}" class="muted">Note: order is older than the trace being kept, or sampling dropped it.
+                The procedure is the same either way — the app-side decision table (see /sampling) says what falls out.</p>
+                <th:block th:if="${trace != null}">
+                    <ul class="spans">
+                        <li th:each="span : ${trace.spans()}" th:classappend="${span.error} ? 'err'">
+                            <span class="bar" th:style="'width:' + ${span.durationMicros() / 1000.0} / ${trace.durationMicros() / 1000.0} * 100 + 0.0 + '%'"></span>
+                            <code th:text="${span.operation()}">op</code>
+                            <em th:text="${span.durationMicros() / 1000.0} + ' ms'">0</em>
+                            <th:block th:if="${span.error}">
+                                <a class="mono" th:href="@{/traces/{id}(id=${trace.traceId()})}">open</a>
+                            </th:block>
+                        </li>
+                    </ul>
+                </th:block>
+            </div>
+
+            <div class="pane">
+                <h2>2 · The log lines</h2>
+                <p th:if="${logs == null or logs.lines.isEmpty()}" class="muted">No lines matched this trace id yet.</p>
+                <ul class="rawlines">
+                    <li th:each="line : ${logs.lines}"><code th:text="${line}">line</code></li>
+                </ul>
+            </div>
+
+            <div class="pane">
+                <h2>3 · The metric</h2>
+                <p><code>checkout_failure_total</code> (last 2m):
+                    <strong th:if="${failureRate != -1}" th:text="${#numbers.formatDecimal(failureRate, 1, 2)} + ' /s'">r</strong>
+                    <span th:if="${failureRate == -1}" class="muted">no data</span></p>
+                <p class="muted">Now the verdict handwriting question from the videos: is this a <em>single</em> incident
+                (fix this one request) or a <em>systemic</em> problem (the whole flow is degrading)? That rate — plus the
+                alert state on /alerts — is how you tell the difference.</p>
+            </div>
+        </div>
+
+        <div class="pane verdict">
+            <h2>Root cause the evidence points to</h2>
+            <p th:if="${rootCause == null or rootCause.isEmpty()}" class="muted">
+                No span carried an exception message (the payment provider is a child span that logged the failure —
+                check its span events in the full trace). The recorded <code>error_code</code> still tells you where it
+                happened: charge/refused, charge/timeout, fraud, etc.</p>
+            <p th:if="${rootCause != null}" class="mono"><code th:text="${rootCause}">cause</code></p>
+        </div>
+    </th:block>
+
+</th:block>

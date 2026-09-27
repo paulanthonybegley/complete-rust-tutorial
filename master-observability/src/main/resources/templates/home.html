@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Home')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('home')}"></nav>
+
+<main>
+    <section class="hero">
+        <h1>Mastering Observability Engineering</h1>
+        <p class="lede">
+            Everything from <em>The Serious CTO's "Mastering Observability Engineering Made Easy!"</em>
+            playlist, built as one mildly broken shop you can drive with your own hands. The two ideas
+            that keep showing up in every lab: observability has <strong>three pillars — logs, metrics,
+            traces</strong> — and they are only worth anything <strong>when they are correlated</strong>.
+            This app links every pillar by a single trace id, so you can chase a failed order from
+            dashboard → trace → log line → metric, end to end.
+        </p>
+    </section>
+
+    <section class="cards">
+        <a class="card" th:href="@{/keystone}">
+            <h2>01 · Link the three</h2>
+            <p>One checkout. One trace id appearing in a log line, on a span, and next to the checkout metric. The keystone of the whole course.</p>
+        </a>
+        <a class="card" th:href="@{/logs}">
+            <h2>02 · Structured logs</h2>
+            <p>JSON out of logback, trace ids in the log line, Loki storing it all and answering queries like the dashboards do.</p>
+        </a>
+        <a class="card" th:href="@{/metrics}">
+            <h2>03 · Business metrics</h2>
+            <p>Prometheus buckets on latency, outcomes and failure reasons. Generate your own traffic and read the numbers it produces.</p>
+        </a>
+        <a class="card" th:href="@{/traces}">
+            <h2>04 · Traces &amp; spans</h2>
+            <p>Every checkout is a root span with children. Open any trace in the app or hand it over to the Jaeger UI.</p>
+        </a>
+        <a class="card" th:href="@{/correlate}">
+            <h2>05 · Correlate end-to-end</h2>
+            <p>The debug procedure the videos teach, top-down: failing order → its trace → the error on a span → its logs → the metric move.</p>
+        </a>
+        <a class="card" th:href="@{/sampling}">
+            <h2>06 · Sample smartly</h2>
+            <p>At scale you keep only what matters. Compare the app-side keep/keep-else and the collector's tail_sampling on one page.</p>
+        </a>
+        <a class="card" th:href="@{/alerts}">
+            <h2>07 · Alert, not fatigue</h2>
+            <p>Real Prometheus rules that fire only on business impact, Alertmanager receipts sat in the database, and the fatigue warning itself.</p>
+        </a>
+        <a class="card" th:href="@{/hygiene}">
+            <h2>08 · Hygiene</h2>
+            <p>Two identical log calls, redacted line vs leaked line, side by side in Loki. Prove PII masking to yourself.</p>
+        </a>
+        <a class="card" th:href="@{/incident}">
+            <h2>09 · Incident drill</h2>
+            <p>Capstone: fabricate an outage, solve it with the top-down procedure alone, and get a verdict on your diagnosis.</p>
+        </a>
+        <a class="card" th:href="@{/scale}">
+            <h2>10 · At scale</h2>
+            <p>Log aggregation and sampling pipelines, autoscaling off business metrics, and every target Prometheus is poking right now.</p>
+        </a>
+        <a class="card ext" href="http://localhost:3000" target="_blank">
+            <h2>11 · Grafana</h2>
+            <p>Provisioned dashboards of the shop: checkout SLO, success/failure rates, latency, sampling volume, alert state.</p>
+        </a>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Alerts')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('alerts')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 07 · ALERTS, NOT FATIGUE</span>
+        <h1>Rules that fire on business impact</h1>
+        <p>
+            The playlist is explicit about alert fatigue: alert when it <em>costs you</em>, not on every blip.
+            Two rules are provisioned in <code>prometheus/alert-rules.yml</code> —
+            <em>FailedCheckoutRateHigh</em> (failure ratio &gt; 10% for 30s) and <em>ShopInstanceDown</em>.
+            When one fires, Alertmanager posts a webhook; this app stores the receipt in the database, and the
+            table below polls both sources every 5s.
+        </p>
+        <p class="muted">To make it fire: POST stress below (or /metrics "fail hard") and keep the ratio over 10% for
+        ~30 seconds. ~15 of the last 20 checkouts failing does exactly that.</p>
+    </header>
+
+    <section class="pane">
+        <h2>Stress — make the shop break</h2>
+        <form class="bar" hx-post="/alerts/stress" hx-target="#stress-out" hx-swap="outerHTML">
+            <input type="number" name="n" value="12" min="6" max="30">
+            <button class="btn badbtn" type="submit">Run a failing burst</button>
+        </form>
+        <div id="stress-out"></div>
+    </section>
+
+    <section hx-get="/alerts/fragment" hx-trigger="load, every 5s" hx-target="this" hx-swap="outerHTML">
+        <p class="muted">Reading Prometheus rules + Alertmanager receipts…</p>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

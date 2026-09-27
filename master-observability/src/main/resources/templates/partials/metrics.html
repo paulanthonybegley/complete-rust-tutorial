@@ -1,0 +1,60 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="generated">
+
+    <div class="pane" th:if="${generated != null}">
+        <div class="panehead">
+            <h2 th:text="'Traffic run: ' + ${generated.mode()}">mode</h2>
+            <span class="muted"><code th:text="${generated.n()}">n</code> requests ·
+                <th:block th:text="${generated.ok()} + ' ok'">ok</th:block> ·
+                <span class="bad" th:if="${generated.failed() > 0}" th:text="${generated.failed()} + ' failed'">f</span></span>
+        </div>
+        <p class="muted">Every checkout is traced too. The last 20 rows below are clickable into Jaeger.</p>
+        <table class="rows">
+            <thead><tr><th>order</th><th></th><th>reason</th><th>latency</th><th>trace</th></tr></thead>
+            <tbody>
+                <tr th:each="r : ${generated.results()}">
+                    <td th:text="${r.orderId()}">id</td>
+                    <td><span class="ok" th:if="${r.ok()}">ok</span><span class="bad" th:unless="${r.ok()}">fail</span></td>
+                    <td th:text="${r.reason()}">-</td>
+                    <td th:text="${r.durationMs()} + ' ms'">ms</td>
+                    <td><a class="mono" th:href="@{/traces/{id}(id=${r.traceId()})}" th:text="${#strings.substring(r.traceId(),0,12)}">tid</a></td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="muted">
+            Watch these move: <a href="http://localhost:9090" target="_blank">Prometheus</a> →
+            <code>checkout_total</code>, <code>checkout_duration_seconds</code>,
+            <code>http_server_requests_seconds_count</code> · and the <a th:href="${grafanaUrl}" target="_blank">Shop overview</a>.
+            "fail hard" for ~30s trips the <em>FailedCheckoutRateHigh</em> alert (see /alerts).
+        </p>
+    </div>
+
+</th:block>
+
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="stats">
+
+    <div class="pane">
+        <div class="panehead"><h2>What the probes changed (Prometheus, now)</h2>
+        <span class="muted">instant queries · refreshes every 6s</span></div>
+        <table class="rows">
+            <thead><tr><th>series</th><th>value</th><th>unit</th></tr></thead>
+            <tbody>
+                <tr th:each="s : ${stats}">
+                    <td><code th:text="${s.label()}">l</code></td>
+                    <td th:text="${s.display()}">v</td>
+                    <td class="muted" th:text="${s.unit()}">u</td>
+                </tr>
+                <tr th:if="${stats == null or stats.isEmpty()}"><td colspan="3" class="muted">No data yet.</td></tr>
+            </tbody>
+        </table>
+        <details class="hint">
+            <summary class="btn ghost">histogram_quantile(0.95, …) — why this shape?</summary>
+            <p>
+                Prometheus buckets are counters: <code>…_bucket{le="…"}</code> count observations up to each bound.
+                The histogram is <em>approximate</em> — a percentile is recomputed out of the bucket sums, so it is only
+                as fine as the bucket layout. That's why the app enables <code>percentiles-histogram</code> on the
+                checkout timer: it asks Micrometer/Prometheus to emit finer bucket boundaries automatically.
+            </p>
+        </details>
+    </div>
+
+</th:block>

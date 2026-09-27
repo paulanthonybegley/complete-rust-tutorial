@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Trace ' + ${#strings.abbreviate(traceId, 16)})}"></head>
+<body>
+<nav th:replace="~{layout :: nav('traces')}"></nav>
+
+<main>
+    <p th:if="${trace == null}" class="bad">
+        Trace <code class="mono" th:text="${traceId}">tid</code> is not in Jaeger (sampling dropped it, or it never
+        reached the collector). Generate more traffic and retry.
+    </p>
+
+    <th:block th:if="${trace != null}">
+        <header class="lghead">
+            <span class="kicker">TRACE DETAIL</span>
+            <h1 th:text="${trace.spans().isEmpty() ? 'Trace' : trace.spans().get(0).operation()}">trace</h1>
+            <p>
+                <code class="mono" th:text="${trace.traceId()}">tid</code> ·
+                <th:block th:text="${trace.spans().size()}">n</th:block> spans ·
+                <th:block th:text="${#numbers.formatDecimal(trace.durationMicros() / 1000.0, 1, 1)} + ' ms'">ms</th:block> ·
+                <span th:if="${trace.hasError()}" class="bad" th:text="${trace.errorSpanCount()} + ' error spans'">err</span>
+                <span th:unless="${trace.hasError()}" class="ok">clean</span>
+            </p>
+        </header>
+
+        <section class="pane">
+            <div class="panehead">
+                <h2>Span waterfall</h2>
+                <a class="btn ext" th:href="${jaegerUrl}" target="_blank">open in Jaeger →</a>
+            </div>
+            <ul class="spans tree">
+                <li th:each="span : ${spans}" th:classappend="${span.error} ? 'err'"
+                    th:style="'--depth:' + ${trace.depth().get(span.spanId()) ?: 0}">
+                    <span class="bar" th:style="'width:' + ${span.durationMicros() / 1000.0} / ${trace.durationMicros() / 1000.0} * 100 + 0.0 + '%'"></span>
+                    <span class="opsvc">
+                        <code th:text="${span.operation()}">op</code>
+                        <em th:text="${span.service()}">svc</em>
+                    </span>
+                    <span class="opmeta">
+                        <code th:text="${#numbers.formatDecimal(span.durationMicros() / 1000.0, 1, 1)} + ' ms'">ms</code>
+                        <em th:if="${span.error()}" class="bad">error</em>
+                    </span>
+                    <details class="hint" th:if="${!span.logs().isEmpty()}">
+                        <summary class="btn ghost">span events</summary>
+                        <ul class="rawlines">
+                            <li th:each="ev : ${span.logs()}">
+                                <code th:text="${#maps}">?</code>
+                                <th:block th:each="field : ${ev.fields()}">
+                                    <code class="mono" th:text="${field.key} + '=' + ${field.value}">k=v</code>
+                                </th:block>
+                            </li>
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+        </section>
+
+        <section class="pane">
+            <h2>Same trace in the log stream</h2>
+            <p class="muted">Because trace_id is also an MDC key in the JSON logs, Loki can return exactly this
+            request's log lines.</p>
+            <pre class="q"><span>LogQL</span> <code th:text="${logQuery}">q</code></pre>
+            <p>Run it in the <a th:href="@{/logs}">logs lab</a> or in Grafana → Explore → Loki.</p>
+        </section>
+    </th:block>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

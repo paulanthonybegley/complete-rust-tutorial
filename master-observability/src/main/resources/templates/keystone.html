@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Link the three')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('keystone')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 01 · THE KEYSTONE</span>
+        <h1>One request, three pillars, one trace id</h1>
+        <p>
+            Metrics count <em>how many</em>, logs say <em>what happened</em>, traces tell <em>where it went</em>.
+            Individually each is weak; the power lives in the <strong>correlation</strong>. Run a checkout below —
+            then look at the three small cards: the <em>log line</em> in Loki, the <em>trace</em> with its spans,
+            and the <em>metric</em> on the history graph. They all carry the exact same <code>trace_id</code>.
+        </p>
+    </header>
+
+    <div hx-post="/keystone/run"
+         hx-trigger="load"
+         hx-target="#result"
+         hx-swap="outerHTML"
+         class="fading"
+         id="keystone-starter"></div>
+
+    <section id="result"></section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

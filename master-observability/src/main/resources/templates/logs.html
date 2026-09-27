@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Logs')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('logs')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 02 · THE LOG PILLAR</span>
+        <h1>Structured JSON logs, aggregated</h1>
+        <p>
+            The app writes JSON log lines via logback + logstash-encoder. Every line carries
+            <code>level</code>, <code>message</code>, <code>service</code>, and — because the OpenTelemetry
+            agent injects it into MDC — <code>trace_id</code> / <code>span_id</code>. Promtail tails the docker
+            logs, lifts two fields into <em>labels</em>, and ships to Loki. You query the outcome below.
+        </p>
+    </header>
+
+    <form class="bar" hx-get="/logs/fragment" hx-target="#entries" hx-swap="outerHTML">
+        <input type="text" name="query" th:value="${query}" placeholder="grep for: trace id, [redacted], checkout, order id…">
+        <select name="level">
+            <option value="any" th:selected="${level == 'any'}">any level</option>
+            <option value="INFO" th:selected="${level == 'INFO'}">INFO</option>
+            <option value="WARN" th:selected="${level == 'WARN'}">WARN</option>
+            <option value="ERROR" th:selected="${level == 'ERROR'}">ERROR</option>
+        </select>
+        <button class="btn" type="submit">Query Loki</button>
+    </form>
+
+    <p class="muted">The query that is about to run: <code class="mono" th:text="${logq}">q</code></p>
+
+    <section id="log-target" th:include="~{partials/logs :: entries}"></section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

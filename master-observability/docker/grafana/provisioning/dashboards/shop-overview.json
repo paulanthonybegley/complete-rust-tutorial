@@ -1,0 +1,138 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "graphTooltip": 1,
+    "links": [],
+    "panels": [
+        {
+            "id": 1,
+            "type": "timeseries",
+            "title": "Checkout throughput (orders/sec)",
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never", "stacking": { "mode": "none" }, "lineInterpolation": "smooth" }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+            "targets": [
+                { "expr": "sum by (outcome) (rate(checkout_total{application=\"observability-shop\"}[1m]))", "legendFormat": "outcome={{outcome}}", "refId": "A" }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "timeseries",
+            "title": "Checkout latency p95",
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never", "stacking": { "mode": "none" }, "lineInterpolation": "smooth" },
+                    "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+            "targets": [
+                { "expr": "histogram_quantile(0.95, sum by (le) (rate(checkout_duration_seconds_bucket{application=\"observability-shop\"}[1m])))", "legendFormat": "p95", "refId": "A" },
+                { "expr": "histogram_quantile(0.50, sum by (le) (rate(checkout_duration_seconds_bucket{application=\"observability-shop\"}[1m])))", "legendFormat": "p50", "refId": "B" }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "timeseries",
+            "title": "Checkout failure rate (%)",
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent",
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never", "stacking": { "mode": "none" }, "lineInterpolation": "smooth" },
+                    "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 10 } ] }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+            "targets": [
+                { "expr": "sum(rate(checkout_failure_total{application=\"observability-shop\"}[1m])) / clamp_min(sum(rate(checkout_total{application=\"observability-shop\"}[1m])), 1) * 100", "legendFormat": "failure %", "refId": "A" }
+            ]
+        },
+        {
+            "id": 4,
+            "type": "timeseries",
+            "title": "Failures by reason",
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "custom": { "drawStyle": "bars", "fillOpacity": 40, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "normal" } }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+            "targets": [
+                { "expr": "sum by (reason) (rate(checkout_failure_total{application=\"observability-shop\"}[1m]))", "legendFormat": "{{reason}}", "refId": "A" }
+            ]
+        },
+        {
+            "id": 5,
+            "type": "stat",
+            "title": "Stock levels (current)",
+            "gridPos": { "h": 8, "w": 6, "x": 0, "y": 16 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] } }, "overrides": [] },
+            "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false } },
+            "targets": [
+                { "expr": "sum by (product) (stock_level{application=\"observability-shop\"})", "legendFormat": "{{product}}", "refId": "A" }
+            ]
+        },
+        {
+            "id": 6,
+            "type": "timeseries",
+            "title": "HTTP server requests (built-in Micrometer)",
+            "gridPos": { "h": 8, "w": 18, "x": 6, "y": 16 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "reqps",
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "none" } }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+            "targets": [
+                { "expr": "sum by (status) (rate(http_server_requests_seconds_count{application=\"observability-shop\"}[1m]))", "legendFormat": "{{status}}", "refId": "A" }
+            ]
+        },
+        {
+            "id": 7,
+            "type": "logs",
+            "title": "Error logs (Loki)",
+            "gridPos": { "h": 12, "w": 24, "x": 0, "y": 24 },
+            "datasource": { "type": "loki", "uid": "loki" },
+            "targets": [
+                { "expr": "{service=\"app\", level=\"error\"}", "refId": "A", "datasource": { "type": "loki", "uid": "loki" } }
+            ],
+            "options": {
+                "showTime": true,
+                "sortOrder": "Descending",
+                "enableLogDetails": true,
+                "prettifyLogMessage": false
+            }
+        }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 39,
+    "tags": [ "observability" ],
+    "templating": { "list": [] },
+    "time": { "from": "now-30m", "to": "now" },
+    "timepicker": {},
+    "title": "Observability Shop — Overview",
+    "uid": "obs-shop-overview",
+    "version": 1
+}

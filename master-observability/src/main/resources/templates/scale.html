@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Scale')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('scale')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 10 · WHEN "JUST A DASHBOARD" STOPS SCALING</span>
+        <h1>Aggregation, sampling, autoscale</h1>
+        <p>
+            The videos close on scale. Three pieces are exercised in this stack, and each is visible from here:
+            <strong>1)</strong> log aggregation — app → docker → promtail → Loki (see the LogQL on /logs) is the
+            pipeline that keeps grep-ing possible at millions of lines; <strong>2)</strong> trace sampling on the
+            collector (see /sampling) so storage only keeps what's worth keeping;
+            <strong>3)</strong> autoscaling off <em>business</em> metrics, not CPU (the sketch below).
+        </p>
+    </header>
+
+    <section class="pane">
+        <h2>Everything Prometheus scrapes right now</h2>
+        <p>
+            <span class="ok" th:text="${activeTargets} + ' targets up'">u</span>
+            <th:block th:if="${downTargets > 0}">
+                · <span class="bad" th:text="${downTargets} + ' down'">d</span> (<a href="http://localhost:9090/targets" target="_blank">see /targets →</a>)
+            </th:block>
+        </p>
+        <p class="muted">The stack names: <code>app:8081/actuator/prometheus</code> (the shop's app metrics),
+        <code>otel-collector:8888</code> (the collector's own), <code>prometheus:9090</code> and <code>alertmanager:9093</code>.</p>
+    </section>
+
+    <section class="pane">
+        <h2>Autoscaling on a business metric — the pattern</h2>
+        <p>The plain-CPU-autoscale is what the playlist mocks: CPU pegs <em>after</em> load, then recovery lags.
+        Here the control loop instead reads the checkout queue directly:</p>
+        <ol class="numbered">
+            <li>Traffic lands in a queue, not on a fixed pool.</li>
+            <li>Gauge <code>checkout_queue_depth</code> (exposed by the app's Micrometer) is scraped every 10s by Prometheus.</li>
+            <li>A recorder rule derives the scheduling target: <code>ceil(queue / (workers_sec · max_queue_each))</code> — add pods
+            when the queue backs up, when failures spike, or when latency p95 crosses its budget.</li>
+            <li>Kubernetes HPA (or any autoscaler) just scales that one series. Same math you already read on /metrics and the dashboards.</li>
+        </ol>
+        <p class="muted">The point: whether it is a page, a queue, or a fleet — you can only cut over on a metric you
+        already trust. Every lab here built that trust.</p>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

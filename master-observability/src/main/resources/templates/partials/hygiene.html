@@ -1,0 +1,53 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="evidence">
+
+    <div th:if="${evidence == null or (evidence.leaks().lines().isEmpty() and evidence.safe().lines().isEmpty())}">
+        <div class="pane muted">
+            <h2>Nothing in Loki yet</h2>
+            <p>Write a line above. Both an INFO and a WARN line will appear here within ~5 seconds (promtail tails
+            docker every second or so).</p>
+        </div>
+    </div>
+
+    <th:block th:if="${evidence != null}">
+        <div class="grid2">
+            <div class="pane safe">
+                <div class="panehead">
+                    <h2>Safe call — masked before it left the JVM</h2>
+                    <span class="ok">email → <code>[email]</code>, password → <code>[redacted]</code></span>
+                </div>
+                <p th:if="${evidence.safe().lines().isEmpty()}" class="muted">No safe lines yet.</p>
+                <ul class="rawlines">
+                    <li th:each="line : ${evidence.safe().lines()}"><code th:text="${line}">line</code></li>
+                </ul>
+                <p class="muted">Query used: <code class="mono">{service="app"} |= "email=[email]"</code></p>
+            </div>
+
+            <div class="pane leaky">
+                <div class="panehead">
+                    <h2>Leak call — raw PII in the stream</h2>
+                    <span class="bad">the actual email + password</span>
+                </div>
+                <p th:if="${evidence.leaks().lines().isEmpty()}" class="muted">No leak lines yet — good thing.</p>
+                <ul class="rawlines">
+                    <li th:each="line : ${evidence.leaks().lines()}"><code th:text="${line}">line</code></li>
+                </ul>
+                <p class="muted">Query used: <code class="mono">{service="app"} |= "LEAK-DEMO"</code></p>
+            </div>
+        </div>
+    </th:block>
+
+    <details class="hint">
+        <summary class="btn ghost">why mask at the call site, not "in the pipeline"?</summary>
+        <p>
+            The regexes live in <code>obs/SafeLog</code>: emails, 13–16 digit card numbers, and
+            <code>password=</code> / <code>token=</code> / <code>secret=</code> style key-values become
+            <code>[redacted]</code>. But the interesting part of this lab is ordering: the redaction runs in the
+            <em>application</em>, before the message reaches logback. A JSON encoder, a collector, Loki — none of them
+            can reliably un-leak a field a developer already logged raw, and no sanitizing pipeline can be trusted to
+            catch every freeform string. So the rule that actually protects data is the boring one: never put PII in a
+            log call to begin with; when you must, mask it where it enters. The leak column is what "someone will
+            remember to mask later" costs when someone doesn't.
+        </p>
+    </details>
+
+</th:block>

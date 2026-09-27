@@ -1,0 +1,55 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # Trace sampling is THE job of this collector. The application sends every trace;
+  # the policies below decide what is actually worth storing in Jaeger:
+  #   1. everything that errored         -> keep
+  #   2. everything slower than 300ms    -> keep
+  #   3. everything carrying a VIP user  -> keep
+  #   4. everything else                 -> probabilistically dropped to 40%
+  # This is the "observability at scale" section of the video series made visible.
+  # In production you would push the policies further with composite `and`/`not`
+  # combinations; each explore of /sampling shows what these rules actually decided.
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 10000
+    policies:
+      - name: failures-kept
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: slow-kept
+        type: latency
+        latency:
+          threshold_ms: 300
+      - name: vip-kept
+        type: string_attribute
+        string_attribute:
+          key: user.tier
+          values: [vip]
+      - name: background-sampled
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 40
+  batch:
+    timeout: 2s
+    send_batch_size: 128
+
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [tail_sampling, batch]
+      exporters: [otlp/jaeger]

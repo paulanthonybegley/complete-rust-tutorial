@@ -1,0 +1,20 @@
+<configuration>
+    <!-- Every app log line is a JSON object. The default LogstashEncoder field set gives
+         us timestamp, version, message, logger_name, thread_name, level, mdc, stack_trace
+         and customFields. The OpenTelemetry agent injects trace_id/span_id into the MDC,
+         so the JSON log line for a request carries the exact ids its spans use.
+
+         Sensitive-data hygiene happens at the call site (obs.SafeLog), not here — a JSON
+         pipeline can never un-redact what a developer logged raw, so the app must not log
+         raw in the first place. The /hygiene lab proves what raw looks like in Loki. -->
+
+    <appender name="JSON-STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service":"observability-shop"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON-STDOUT"/>
+    </root>
+</configuration>

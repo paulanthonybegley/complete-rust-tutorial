@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Sampling')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('sampling')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 06 · OBSERVABILITY AT SCALE</span>
+        <h1>Sampling: keep the failures, skip the chaff</h1>
+        <p>
+            When you do a million requests a minute you cannot store a million traces. The videos are explicit:
+            <strong>sample intelligently</strong> — keep everything that is broken, slow, or paying, and drop the rest.
+            Two layers decide here: the app-side <em>TraceDecider</em> (primary decision, stored in the database)
+            and the Collector's <em>tail_sampling</em> policy (what actually lands in Jaeger). This lab fires a burst
+            of synthetic requests and lets you compare the two layers.
+        </p>
+        <p class="muted">Policy on the collector (otel-collector-config.yml): <code>error → keep</code>,
+        <code>slow ≥ 300ms → keep</code>, <code>user.tier=vip → keep</code>, else random 40%.</p>
+    </header>
+
+    <section class="pane">
+        <h2>Fire a burst of synthetic requests</h2>
+        <form class="bar" hx-post="/sampling/generate" hx-target="#generated" hx-swap="innerHTML" hx-indicator="#sp-loading">
+            <select name="mix">
+                <option value="mixed">mixed — realistic</option>
+                <option value="fail">fail-heavy — most kept</option>
+                <option value="slow">slow-heavy — latency kept</option>
+                <option value="clean">clean &amp; fast — mostly dropped</option>
+            </select>
+            <input type="number" name="n" value="40" min="5" max="100">
+            <button class="btn" type="submit">Generate</button>
+            <span id="sp-loading" class="hx-ind" aria-busy="true"></span>
+        </form>
+        <p class="muted">Each probe runs detached from the request thread, so the burst completes fast; the probes then
+        re-attach a fresh root context and export their own decisions.</p>
+    </section>
+
+    <section id="generated">
+        <p class="muted">Nothing generated yet.</p>
+    </section>
+
+    <section hx-get="/sampling/stats" hx-trigger="load, every 6s" hx-target="this" hx-swap="outerHTML">
+        <p class="muted">Loading decision stats…</p>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

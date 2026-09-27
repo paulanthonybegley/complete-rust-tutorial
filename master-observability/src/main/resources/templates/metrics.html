@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Metrics')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('metrics')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 03 · THE METRIC PILLAR</span>
+        <h1>Business metrics into Prometheus</h1>
+        <p>
+            The shop pages them from Micrometer to <code>/actuator/prometheus</code>; Prometheus scrapes it every 10s
+            and keeps numbers forever. The interesting part is that the metrics are <em>business</em> metrics —
+            <code>checkout_total</code>, <code>checkout_failure_total</code>, <code>checkout_duration_seconds</code>.
+            That single "we have a metrics stack" fact gets you dashboards, alerts and even autoscaling (see /scale).
+            Hit traffic below and watch both Prometheus and the table move.
+        </p>
+    </header>
+
+    <section class="pane">
+        <h2>Generate traffic</h2>
+        <form class="bar" hx-post="/metrics/traffic" hx-target="#generated" hx-swap="outerHTML" hx-indicator="#mk-loading">
+            <select name="mode">
+                <option value="mixed">mixed — natural 20% failures</option>
+                <option value="success">happy path — no failures</option>
+                <option value="fail">fail hard — every request fails, alert-friendly</option>
+                <option value="slow">slow — each checkout takes ~450ms, latency-friendly</option>
+            </select>
+            <input type="number" name="n" value="12" min="1" max="60">
+            <button class="btn" type="submit">Run</button>
+            <span id="mk-loading" class="hx-ind" aria-busy="true"></span>
+        </form>
+        <p class="muted">Each request runs as a full checkout with its own trace; the "fail"/"slow" generator is capped so
+        the lab stays snappy.</p>
+    </section>
+
+    <section id="generated">
+        <p class="muted">Nothing generated yet.</p>
+    </section>
+
+    <section class="pane" hx-get="/metrics/stats" hx-trigger="load, every 6s" hx-target="this" hx-swap="outerHTML">
+        <p class="muted">Loading live stats from Prometheus…</p>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

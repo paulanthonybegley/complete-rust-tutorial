@@ -1,0 +1,31 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="entries">
+
+    <div class="pane" th:if="${result != null and !result.lines.isEmpty()}">
+        <div class="panehead">
+            <h2>Lines returned by Loki</h2>
+            <span class="muted"><code th:text="${result.lines.size()}">n</code> lines</span>
+        </div>
+        <ul class="rawlines">
+            <li th:each="line : ${result.lines}">
+                <code th:text="${line}">line</code>
+            </li>
+        </ul>
+    </div>
+
+    <div th:if="${result == null or result.lines.isEmpty()}" class="pane muted">
+        <h2>Nothing matched</h2>
+        <p>Generate some traffic elsewhere (a checkout on the home page or /metrics) or broaden the filter, then re-run.</p>
+    </div>
+
+    <details class="hint">
+        <summary class="btn ghost">why do I only see fields on the left of <code>{selector}</code>?</summary>
+        <p>
+            Loki indexes <strong>labels</strong> — the key-value pairs inside the selector braces. The full JSON line is
+            the <em>log stream</em>, stored once per unique label set. LogQL filters like <code>|=</code> scan the stream,
+            but only labels are indexed. That is why promtail promotes <code>level</code> and <code>trace_id</code> into
+            labels (see promtail-config.yml) — those are what make <code>{service="app",level="ERROR"}</code> cheap, and
+            why "grep everything" hits correlate+alerts+hook-metric hard.
+        </p>
+    </details>
+
+</th:block>

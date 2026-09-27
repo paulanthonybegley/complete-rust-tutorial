@@ -1,0 +1,168 @@
+name: master-observability
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: docker/db.Dockerfile
+    image: obs-shop-db:pg16
+    container_name: obs-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+    image: obs-shop-app:boot4
+    container_name: obs-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+      SPRING_DATASOURCE_USERNAME: observability_app
+      SPRING_DATASOURCE_PASSWORD: observability_app
+      OBS_PROMETHEUS_URL: http://prometheus:9090
+      OBS_LOKI_URL: http://loki:3100
+      OBS_JAEGER_URL: http://jaeger:16686
+      OBS_ALERTMANAGER_URL: http://alertmanager:9093
+      OTEL_SERVICE_NAME: observability-shop
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+      OTEL_TRACES_SAMPLER: parentbased_always_on
+      JAVA_OPTS: -XX:MaxRAMPercentage=75
+    ports:
+      - "8083:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  otel-collector:
+    build:
+      context: docker/otel-collector
+    image: obs-otel-collector:0.121
+    container_name: obs-otel
+    ports:
+      - "4317:4317"
+    depends_on:
+      jaeger:
+        condition: service_started
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.76.0
+    container_name: obs-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+    volumes:
+      - jaegerdata:/badger
+
+  prometheus:
+    build:
+      context: docker/prometheus
+    image: obs-prometheus:v2.55
+    container_name: obs-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - promdata:/prometheus
+    depends_on:
+      app:
+        condition: service_healthy
+      alertmanager:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:9090/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  alertmanager:
+    build:
+      context: docker/alertmanager
+    image: obs-alertmanager:v0.28
+    container_name: obs-alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --log.level=debug
+    ports:
+      - "9093:9093"
+    depends_on:
+      app:
+        condition: service_healthy
+
+  loki:
+    build:
+      context: docker/loki
+    image: obs-loki:3.4
+    container_name: obs-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - lokidata:/loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  promtail:
+    build:
+      context: docker/promtail
+    image: obs-promtail:3.4
+    container_name: obs-promtail
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      loki:
+        condition: service_healthy
+
+  grafana:
+    build:
+      context: docker/grafana
+    image: obs-grafana:11.5
+    container_name: obs-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  pgdata:
+  promdata:
+  lokidata:
+  jaegerdata:
+  grafanadata:

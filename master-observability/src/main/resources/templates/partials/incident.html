@@ -1,0 +1,105 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="generated">
+
+    <div class="flash" th:if="${produced != null}">
+        <p>The incident materialized.</p>
+        <table class="rows">
+            <thead><tr><th>order</th><th>error code</th><th>trace</th><th></th></tr></thead>
+            <tbody>
+                <tr th:each="f : ${produced}">
+                    <td th:text="${'#' + f.id()}">id</td>
+                    <td><code th:text="${f.errorCode()}">code</code></td>
+                    <td><code class="mono" th:text="${#strings.substring(f.traceId(), 0, 14)} + '…'">tid</code></td>
+                    <td><button class="btn" hx-get="/incident/solve"
+                            hx-vals='{"orderId": "${f.id()}"}'
+                            hx-target="#incident"
+                            hx-swap="innerHTML">solve this one →</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</th:block>
+
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="solve">
+
+    <p th:if="${error}" class="bad" th:text="${error}">error</p>
+
+    <th:block th:if="${order != null}">
+        <div class="flash">
+            <p>Outage order <strong th:text="${'#' + order.id()}">id</strong> ·
+                <span class="bad">failed</span> · trace
+                <code class="mono" th:text="${#strings.substring(order.traceId(), 0, 14)} + '…'">tid</code>
+                (<a th:href="${jaegerUrl}" target="_blank">full trace in Jaeger →</a>)</p>
+        </div>
+
+        <div class="grid3">
+            <div class="pane">
+                <h2>Evidence 1 · the trace</h2>
+                <ul class="spans">
+                    <li th:each="span : ${trace == null ? {} : trace.spans()}" th:classappend="${span.error} ? 'err'">
+                        <code th:text="${span.operation()}">op</code>
+                        <em th:text="${#numbers.formatDecimal(span.durationMicros() / 1000.0, 1, 1)} + ' ms'">0</em>
+                    </li>
+                </ul>
+                <p th:if="${trace == null}" class="muted">Trace not found (too fresh for tail_sampling or dropped).</p>
+                <p th:if="${trace != null and trace.errorSpanCount() == 0}" class="muted">No error spans — look again:
+                is this order actually the same one you generated?</p>
+            </div>
+
+            <div class="pane">
+                <h2>Evidence 2 · the log lines</h2>
+                <ul class="rawlines">
+                    <li th:each="line : ${logs == null ? {} : logs.lines()}"><code th:text="${line}">line</code></li>
+                </ul>
+                <p th:if="${logs == null or logs.lines().isEmpty()}" class="muted">No matching log lines yet.</p>
+            </div>
+
+            <div class="pane">
+                <h2>Evidence 3 · the metric</h2>
+                <p>Failure rate (2m): <strong th:text="${#numbers.formatDecimal(failureRate, 1, 2)} + ' /s'">r</strong> —
+                if this is well above its quiet baseline, you are looking at a systemic incident, not a one-off.</p>
+                <p class="muted">Check the alert state on /alerts: if FailedCheckoutRateHigh is firing, the drill wants
+                the <em>system</em> fixed, not the order replayed.</p>
+            </div>
+        </div>
+
+        <div class="pane">
+            <h2>Your diagnosis</h2>
+            <p class="muted">The trace<span th:if="${answerGiven == null}"> — the error is on the payment/charge span, or
+            nowhere; the recorded error_code is the ground truth the drill checks you against</span>:</p>
+
+            <form class="bar" hx-post="/incident/answer"
+                  hx-vals='{"orderId": "${order.id()}"}'
+                  hx-target="#solve-out"
+                  hx-swap="outerHTML">
+                <select name="pick">
+                    <option th:each="entry : ${bones}" th:value="${entry.key}" th:text="${entry.value}">hypothesis</option>
+                </select>
+                <button class="btn" type="submit">Commit to root cause</button>
+            </form>
+            <span th:if="${logs != null}"> </span>
+            <div id="solve-out">
+                <div th:if="${answerGiven != null}" th:classappend="${answerGiven.correct()} ? 'verdict-ok' : 'verdict-no'">
+                    <p>
+                        <strong th:if="${answerGiven.correct()}">Correct.</strong>
+                        <strong th:unless="${answerGiven.correct()}">Not quite.</strong>
+                        <span th:unless="${answerGiven.correct()}">
+                            You blamed <em th:text="'“' + ${answerGiven.hypothesis} + '”'">h</em>; the order was recorded
+                            with <code th:text="${answerGiven.actualErrorCode()}">code</code>, and the span said
+                            <code th:text="${answerGiven.spanEvidence()}">ev</code>.
+                            Re-read the trace, reset with a fresh incident, and go again.
+                        </span>
+                        <span th:if="${answerGiven.correct()}">
+                            <code th:text="${answerGiven.spanEvidence()}">ev</code> was the give-away on the
+                            charge span — and you connected it to the log line for <code th:text="${'#' + order.id()}">id</code>.
+                        </span>
+                    </p>
+                    <p class="muted">What would the fix be in production? The payment provider responded
+                    <code th:text="${answerGiven.actualErrorCode()}">code</code> — the runbook for that code, not a redeploy,
+                    is the on-call move here.</p>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+</th:block>

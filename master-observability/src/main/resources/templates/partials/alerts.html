@@ -1,0 +1,65 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="stress">
+
+    <div th:if="${stressRuns != null}" class="flash">
+        <p>
+            Ran <code th:text="${stressRuns}">n</code> checkouts —
+            <span class="bad" th:text="${stressFailures} + ' failures'">f</span>.
+            <span th:text="${stressNote}">note</span>
+        </p>
+    </div>
+
+</th:block>
+
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="overview">
+
+    <div class="pane">
+        <div class="panehead">
+            <h2>Prometheus rule state</h2>
+            <span class="muted" th:text="${view.reachable()} ? 'live' : 'Prometheus not answering — is it up?'">live</span>
+        </div>
+        <table class="rows" th:if="${view.rules() != null and !view.rules().isEmpty()}">
+            <thead><tr><th>rule</th><th>group</th><th>state</th><th>active alerts</th></tr></thead>
+            <tbody>
+                <tr th:each="rule : ${view.rules()}">
+                    <td><code th:text="${rule.name()}">name</code></td>
+                    <td class="muted" th:text="${rule.group()}">g</td>
+                    <td th:classappend="${rule.state() == 'firing'} ? 'bad'" th:text="${rule.state()}">st</td>
+                    <td th:text="${rule.activeAlertCount()}">n</td>
+                </tr>
+            </tbody>
+        </table>
+        <p th:if="${view.rules() == null or view.rules().isEmpty()}" class="muted">No rules loaded.</p>
+    </div>
+
+    <div class="pane">
+        <div class="panehead"><h2>Alertmanager receipts → alert_events table</h2></div>
+        <table class="rows" th:if="${events != null and !events.isEmpty()}">
+            <thead><tr><th>received</th><th>alert</th><th>status</th><th>labels</th></tr></thead>
+            <tbody>
+                <tr th:each="ev : ${events}">
+                    <td th:text="${#temporals.format(ev.receivedAt(), 'HH:mm:ss')}">t</td>
+                    <td><code th:text="${ev.alertName()}">a</code></td>
+                    <td th:classappend="${ev.status() == 'firing'} ? 'bad'" th:text="${ev.status()}">st</td>
+                    <td class="muted"><code th:text="${#strings.abbreviate(ev.labels(), 60)}">l</code></td>
+                </tr>
+            </tbody>
+        </table>
+        <p th:if="${events == null or events.isEmpty()}" class="muted">
+            No webhooks yet. The full loop is: Prometheus rule evaluates → fires → Alertmanager receives it →
+            notifies the webhook → this app inserts a row. ~15 failing checkouts over 30s usually trips it. Patience:
+            the alert needs a 5m lookback to compute the ratio and 30s to go from pending → firing.
+        </p>
+    </div>
+
+    <details class="hint">
+        <summary class="btn ghost">why is "alert fatigue" a design decision, not a complaint?</summary>
+        <p>
+            Every alert you add costs attention; attention is the only resource a team never buys more of.
+            The videos' test for a good alert: <em>what action will the on-call engineer take when it fires?</em>
+            If the answer is "restart something / ignore it", the alert should probably be a dashboard instead.
+            ShopInstanceDown exists because an SLO like "checkouts under 1s" goes silent at 00:00 — a down target
+            alerts you that the ping itself broke.
+        </p>
+    </details>
+
+</th:block>

@@ -1,0 +1,27 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="list">
+
+    <div class="pane">
+        <div class="panehead">
+            <h2>Recent traces (observability-shop)</h2>
+            <span class="muted">polling Jaeger every 10s</span>
+        </div>
+        <p th:if="${traces == null or traces.isEmpty()}" class="muted">
+            No traces yet. Either Jaeger just started, or the tail_sampling policy dropped the last batch —
+            visit /keystone or /metrics and generate some, then wait a poll or two.
+        </p>
+        <table class="rows" th:if="${traces != null and !traces.isEmpty()}">
+            <thead><tr><th>span</th><th>services</th><th>spans</th><th>duration</th><th>status</th><th></th></tr></thead>
+            <tbody>
+                <tr th:each="t : ${traces}">
+                    <td><code th:text="${t.spans().isEmpty() ? '?' : t.spans().get(0).operation()}">op</code></td>
+                    <td class="muted" th:text="${#strings.listJoin(t.services(), ', ')}">svcs</td>
+                    <td th:text="${t.spans().size()}">n</td>
+                    <td th:text="${#numbers.formatDecimal(t.durationMicros() / 1000.0, 1, 1)} + ' ms'">ms</td>
+                    <td><span th:if="${t.hasError()}" class="bad">has errors</span><span th:unless="${t.hasError()}" class="ok">clean</span></td>
+                    <td><a class="btn ghost" th:href="@{/traces/{id}(id=${t.traceId()})}" th:text="${#strings.substring(t.traceId(),0,12)}">tid</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</th:block>

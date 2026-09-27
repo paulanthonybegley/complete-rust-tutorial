@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Correlate')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('correlate')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 05 · ONE DEBUG PROCEDURE</span>
+        <h1>Top-down correlation: trace → logs → metric</h1>
+        <p>
+            The second video's key move: when something fails, <strong>never restart and hope</strong>.
+            Record it, then walk the links — the failing order has a <em>trace</em>; the trace has spans with
+            errors; the trace id picks out the <em>log lines</em>; the metrics show whether this is one-off or
+            systemic. Pick a failed order below; each row was produced by real traffic a moment ago, so its
+            trace really exists in Jaeger.
+        </p>
+    </header>
+
+    <section class="pane">
+        <div class="panehead"><h2>Failed orders to investigate</h2></div>
+        <p th:if="${failures == null or failures.isEmpty()}" class="muted">
+            No real failed orders with traces yet — create some on /metrics ("fail hard") or run the /incident drill.
+        </p>
+        <table class="rows" th:if="${failures != null and !failures.isEmpty()}">
+            <thead><tr><th>order</th><th>customer</th><th>product</th><th>error code</th><th>trace id</th></tr></thead>
+            <tbody>
+                <tr th:each="f : ${failures}"
+                    hx-get="/correlate/evidence"
+                    hx-vals='{"orderId": "${f.id()}"}'
+                    hx-target="#evidence"
+                    hx-swap="innerHTML"
+                    hx-trigger="click">
+                    <td th:text="${f.id()}">id</td>
+                    <td th:text="${f.customerId()}">c</td>
+                    <td th:text="${f.productId()}">p</td>
+                    <td><code th:text="${f.errorCode()}">code</code></td>
+                    <td><code class="mono" th:text="${#strings.substring(f.traceId(), 0, 14)} + '…'">tid</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="evidence" hx-get="/correlate/evidence"
+             hx-vals='{"orderId": "${selected != null ? selected.id() : -1}"}'
+             hx-trigger="load">
+        <p class="muted">Loading…</p>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

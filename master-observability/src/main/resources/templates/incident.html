@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Incident')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('incident')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 09 · CAPSTONE DRILL</span>
+        <h1>Respond like it is real</h1>
+        <p>
+            Everything the videos teach, used once: fabricate an outage, then solve it top-down —
+            start from a failing order, read its trace, check the log lines, confirm with the metric,
+            and <em>commit to a root cause</em>. If your hypothesis is wrong the drill tells you why,
+            and you restart with a clean trace instead of a restarted box.
+        </p>
+    </header>
+
+    <section class="pane">
+        <h2>Fabricate the incident</h2>
+        <button class="btn badbtn" hx-post="/incident/generate" hx-target="#incident" hx-swap="innerHTML" hx-indicator="#in-loading">
+            Simulate a checkout outage
+        </button>
+        <span id="in-loading" class="hx-ind" aria-busy="true"></span>
+        <p class="muted">20 checkouts, half forced to fail with realistic error codes, a few slowed down.
+        The failing ones carry real traces into Jaeger.</p>
+        <p th:if="${failureIds != null and !failureIds.isEmpty()}" class="muted">
+            Recent real failures (click any to solve): <code th:text="${failureIds}">ids</code>
+            — or use the table that appears after generating.
+        </p>
+    </section>
+
+    <section id="incident"></section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>

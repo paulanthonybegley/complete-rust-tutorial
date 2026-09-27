@@ -1,0 +1,53 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="result">
+
+    <div class="flash">
+        <p>
+            Posted checkout for customer 4, order <strong th:text="${result.orderId()}" >#0</strong>
+            <th:block th:if="${result.ok()}">placed successfully</th:block>
+            <th:block th:unless="${result.ok()}">
+                <span class="bad">failed — <code th:text="${result.reason()}">reason</code></span>
+            </th:block>
+            in <code th:text="${result.durationMs()} + ' ms'">ms</code>.
+            Trace <code class="mono" th:text="${result.traceId()}">tid</code>
+        </p>
+        <p class="muted">The three views below asked Loki, Jaeger and Prometheus — the exact same stores the Grafana dashboards read. All three should show this trace id.</p>
+    </div>
+
+    <div class="grid3">
+        <div class="pane">
+            <h2>Logs — written by the app</h2>
+            <p class="muted">Structured JSON, shipped via docker → promtail → Loki, queried back by <code>{service="app"} |= "&lt;trace_id&gt;"</code>.</p>
+            <p th:if="${logs == null or logs.lines.isEmpty()}" class="muted">No lines matched yet — bridge checks logs and retries.</p>
+            <ul class="rawlines">
+                <li th:each="line : ${logs.lines}"><code th:text="${line}">line</code></li>
+            </ul>
+            <pre th:if="${logQuery}" class="q"><span>LogQL</span> <code th:text="${logQuery}">query</code></pre>
+        </div>
+
+        <div class="pane">
+            <h2>Traces — the request path</h2>
+            <p class="muted">Root span to JVM, child spans for each remote-ish hop. Error spans are red.</p>
+            <p th:if="${trace == null}" class="muted">No trace yet. Trace export uses a tail_sampling collector — a couple of retries, then check Jaeger.</p>
+            <ul th:if="${trace != null}" class="spans">
+                <li th:each="span : ${trace.spans()}" th:classappend="${span.error} ? 'err'">
+                    <span class="bar" th:style="'width:' + ${span.durationMs} / 60 + '%'"></span>
+                    <code th:text="${span.operationName()}">op</code>
+                    <em th:text="${span.durationMs()} + ' ms'">0</em>
+                </li>
+            </ul>
+            <a th:if="${jaegerUrl}" class="btn ext" th:href="${jaegerUrl}" target="_blank">open in Jaeger →</a>
+        </div>
+
+        <div class="pane">
+            <h2>Metrics — the outcome</h2>
+            <p class="muted">This request moved <code>checkout_total</code>, <code>checkout_duration_seconds</code>
+               and, if it failed, <code>checkout_failure_total</code> — every one tagged with its outcome or reason.</p>
+            <p class="muted">The <em>Shop overview</em> Grafana dashboard paints these as counters and a latency histogram;
+               reload it a couple of times and the moving average changes with your traffic.</p>
+            <a class="btn ext" href="http://localhost:3000/d/obs-shop-overview?orgId=1" target="_blank">open Shop overview →</a>
+            <p class="muted">Corollary: one request is nothing a metric can tell you. Metrics react to a <em>population</em> —
+               that is what /metrics and the incident drill are for.</p>
+        </div>
+    </div>
+
+</th:block>

@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: observability-shop
+  datasource:
+    url: jdbc:postgresql://db:5432/postgres
+    username: observability_app
+    password: observability_app
+    hikari:
+      maximum-pool-size: 12
+      connection-timeout: 10000
+    driver-class-name: org.postgresql.Driver
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
+
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+    access:
+      default: read_only
+  metrics:
+    tags:
+      application: observability-shop
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        checkout_duration: true
+
+logging:
+  level:
+    root: INFO
+    com.example.observability: INFO
+
+obs:
+  prometheus-url: http://prometheus:9090
+  loki-url: http://loki:3100
+  jaeger-url: http://jaeger:16686
+  alertmanager-url: http://alertmanager:9093
+  sampler:
+    slow-ms: 300
+    keep-ratio: 0.4

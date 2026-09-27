@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' · Master Observability'">Master Observability</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://unpkg.com/htmx.org@2.0.6/dist/htmx.min.js" defer></script>
+</head>
+
+<nav th:fragment="nav(active)" class="topnav">
+    <a th:href="@{/}" class="brand" th:classappend="${active == 'home'} ? 'on'">Obs</a>
+    <div class="links">
+        <a th:href="@{/keystone}" th:classappend="${active == 'keystone'} ? 'on'">Link 3</a>
+        <a th:href="@{/logs}" th:classappend="${active == 'logs'} ? 'on'">Logs</a>
+        <a th:href="@{/metrics}" th:classappend="${active == 'metrics'} ? 'on'">Metrics</a>
+        <a th:href="@{/traces}" th:classappend="${active == 'traces'} ? 'on'">Traces</a>
+        <a th:href="@{/correlate}" th:classappend="${active == 'correlate'} ? 'on'">Correlate</a>
+        <a th:href="@{/sampling}" th:classappend="${active == 'sampling'} ? 'on'">Sampling</a>
+        <a th:href="@{/alerts}" th:classappend="${active == 'alerts'} ? 'on'">Alerts</a>
+        <a th:href="@{/hygiene}" th:classappend="${active == 'hygiene'} ? 'on'">Hygiene</a>
+        <a th:href="@{/incident}" th:classappend="${active == 'incident'} ? 'on'">Incident</a>
+        <a th:href="@{/scale}" th:classappend="${active == 'scale'} ? 'on'">Scale</a>
+        <a href="http://localhost:3000" target="_blank" class="ext" title="Provisioned Grafana dashboards">Grafana</a>
+        <a href="http://localhost:16686" target="_blank" class="ext" title="Jaeger UI">Jaeger</a>
+        <a href="http://localhost:9090" target="_blank" class="ext" title="Prometheus UI">Prometheus</a>
+    </div>
+</nav>
+
+<footer th:fragment="footer" class="foot">
+    <p>Educational app following <em>The Serious CTO - "Mastering Observability Engineering Made Easy!"</em>.
+       Logs + metrics + traces, linked by trace ids, shipped through an OpenTelemetry Collector,
+       stored in Loki, Prometheus and Jaeger, painted by Grafana.</p>
+</footer>
+</html>

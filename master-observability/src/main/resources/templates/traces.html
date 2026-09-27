@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Traces')}"></head>
+<body>
+<nav th:replace="~{layout :: nav('traces')}"></nav>
+
+<main>
+    <header class="lghead">
+        <span class="kicker">LAB 04 · THE TRACE PILLAR</span>
+        <h1>Distributed traces, rendered from Jaeger</h1>
+        <p>
+            The OpenTelemetry Java agent wraps every request; each checkout becomes a root span plus spans for the
+            payment call, stock check and order write. The Collector forwards them to Jaeger (after its sampling
+            policies — see /sampling). This list queries Jaeger's API directly and redraws it as you poll.
+        </p>
+    </header>
+
+    <p th:if="${reachable}" class="ok">Jaeger reachable at <code class="mono">http://jaeger:16686</code> —
+        <a th:href="${jaegerSearchUrl}" target="_blank">or use its search UI →</a></p>
+    <p th:unless="${reachable}" class="bad">Jaeger did not answer — is the stack up? (<code>docker compose up -d</code>)</p>
+
+    <section hx-get="/traces/list" hx-trigger="load, every 10s" hx-target="this" hx-swap="outerHTML" class="pane">
+        <p class="muted">Talking to Jaeger…</p>
+    </section>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>
